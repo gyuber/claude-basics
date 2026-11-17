@@ -348,6 +348,32 @@ S['11-folders'] = page(
     '<div class="call" style="left:296px;top:478px">＋ › 폴더 추가</div>'
     '<div class="call" style="left:22px;top:560px">↑ 사이드바는 사건 폴더별로 묶여요</div>')
 
+# 00b: Chat sidebar (scattered chats) vs Code sidebar (grouped by case folder)
+def _mini(title, body):
+    return (f'<div style="flex:1;background:#FAF9F5;border-radius:12px;box-shadow:0 10px 30px rgba(40,35,25,.18);'
+            f'overflow:hidden;display:flex;flex-direction:column"><div class="top"><b>{title}</b></div>'
+            f'<div style="padding:14px 18px;display:flex;flex-direction:column;gap:4px;font-size:14px">{body}</div></div>')
+_chats = ['계약서 검토해줘', '새 채팅', '판결문 요약', '판결문 요약 (2)', '내용증명 써줘', '아까 그 계약서 다시',
+          '거래내역 엑셀 정리', '새 채팅', '내용증명 다시', '판결문 쟁점만', '증거목록 만들기', '이거 이어서',
+          '임대차 내용증명', '새 채팅', '계약서 5조 질문', '판결문 요약 (3)']
+_chat_body = ''.join(f'<div class="sess">{c}<span class="badge wait">?</span></div>' if '새 채팅' in c or '(2)' in c or '(3)' in c or '다시' in c or '이어서' in c
+                     else f'<div class="sess">{c}</div>' for c in _chats)
+_code_body = ('<div class="sec">📁 2026가합1234 매매대금 ⌄</div>'
+              '<div class="sess">판결문 요약<span class="badge done">완료</span></div>'
+              '<div class="sess">증거목록<span class="badge done">완료</span></div>'
+              '<div class="sess">항소이유서 초안<span class="badge run">진행 중</span></div>'
+              '<div class="sec">📁 2026가단5678 임대차 ⌄</div>'
+              '<div class="sess">내용증명 초안<span class="badge done">완료</span></div>'
+              '<div class="sec" style="margin-top:14px">사건 폴더 안 (모두 남아 있어요)</div>'
+              '<div class="tree">📄 CLAUDE.md (우리는 매수인 측)<br>📁 자료 · 판결문, 계약서, 거래내역<br>'
+              '📁 결과물 · 판결문요약.docx, 증거목록.xlsx<br>📁 .claude/skills · 내용증명</div>')
+S['00-chat-vs-code'] = page(
+    '<div style="position:absolute;inset:18px;display:flex;gap:22px">' +
+    _mini('💬 Chat 사이드바: 대화가 흩어져요', _chat_body) +
+    _mini('</> Code 사이드바: 사건 폴더별로 모여요', _code_body) + '</div>',
+    '<div class="call" style="left:150px;top:715px">같은 사건인데 어디 있는지 몰라요</div>'
+    '<div class="call" style="left:780px;top:715px">사건마다 기록, 규칙, 결과물이 한곳에</div>')
+
 
 def main():
     out = sys.argv[1]
