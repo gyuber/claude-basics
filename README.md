@@ -3,6 +3,8 @@
 Claude 데스크톱 앱의 **Code 탭(Claude Code)**으로 문서·엑셀 작업을 하는 법을 배우는 짧은 강의입니다.
 코딩은 몰라도 돼요. 순서대로 한 편씩 읽고, 궁금한 건 언제든 물어보세요.
 
+🎞️ 슬라이드로 보기: https://gyuber.github.io/claude-basics/slides/
+
 ## 전체 그림
 
 ```mermaid
@@ -29,7 +31,7 @@ flowchart LR
 | 11 | [꼭 지킬 것](lessons/11-꼭-지킬-것.md) | 비밀, 원본, 허락 요청 |
 | 12 | [자주 묻는 질문](lessons/12-자주-묻는-질문.md) | 질문이 생길 때마다 추가 |
 
-슬라이드: [`slides/index.html`](slides/index.html) — 칠판 스타일 20장, 크롬으로 열고 →/← 키로 넘기기 (인터넷 필요)
+🎞️ **슬라이드 보기: https://gyuber.github.io/claude-basics/slides/** (칠판 스타일 20장, →/← 키로 넘기기)
 
 부록: [작업 폴더 템플릿](workspace-템플릿/) — 동생이 세팅할 때 쓰는 파일
 
