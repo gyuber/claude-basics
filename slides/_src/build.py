@@ -53,8 +53,8 @@ n=[1]
 def num(m):
     n[0]+=1; return f'<span>{n[0]:02d}</span></div>\n</section>'
 sec=re.sub(r'<span>\d\d</span></div>\n</section>',num,sec)
-for name,img in [('index.html','../images/official'),('artifact.html','images')]:
-    full=head+'\n'+sec.replace('IMG',img)+'\n'+tail
+for name,img,scn in [('index.html','../images/official','../images/scenes'),('artifact.html','images','scenes')]:
+    full=head+'\n'+sec.replace('IMG',img).replace('SCN',scn)+'\n'+tail
     if name=='artifact.html':
         for pat in [r'<!doctype html>\s*',r'<html[^>]*>\s*',r'<head>\s*',r'<meta charset="utf-8">\s*',r'<meta name="viewport"[^>]*>\s*',r'</head>\s*',r'<body>\s*',r'</body>\s*',r'</html>\s*']:
             full=re.sub(pat,'',full,count=1,flags=re.I)
