@@ -5,8 +5,8 @@
 | 파일 | 역할 |
 |---|---|
 | `CLAUDE.md` | 시작하자/마무리하자 절차와 규칙. Claude가 자동으로 읽음 |
-| `.claude/settings.json` | 허용·차단 명령 (차단은 Auto 모드에서도 지켜짐) |
-| `user-settings.json` | 작업하는 PC의 `~/.claude/settings.json`에 넣을 내용. **Auto 모드를 기본값으로** (작업 폴더 설정에 넣으면 적용 안 됨) |
+| `.claude/settings.json` | 허용·차단 명령 (차단은 자동 모드에서도 지켜짐) |
+| `user-settings.json` | 작업하는 PC의 `~/.claude/settings.json`에 넣을 내용. **자동 모드를 기본값으로** (작업 폴더 설정에 넣으면 적용 안 됨) |
 | `.gitignore` | `자료/`, `결과물/`을 GitHub에서 제외 |
 | `.claude/skills/` | 스킬 목록(`목록.md`)과 예시 스킬 |
 

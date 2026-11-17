@@ -234,7 +234,7 @@
   <h2>이번 이야기</h2>
   <div class="rows" style="gap:12px">
     <div class="row"><span class="n">1</span><h3>Claude Code 란</h3><span class="r">폴더째로 일 맡기기</span></div>
-    <div class="row"><span class="n">2</span><h3>화면과 권한 모드</h3><span class="r">볼 곳, 평소엔 Auto</span></div>
+    <div class="row"><span class="n">2</span><h3>화면과 권한 모드</h3><span class="r">볼 곳, 평소엔 자동</span></div>
     <div class="row"><span class="n">3</span><h3>일 시키기</h3><span class="r">좋은 지시, 여러 작업 동시에</span></div>
     <div class="row"><span class="n">4</span><h3>CLAUDE.md 와 스킬</h3><span class="r">한 번 적어 두고 계속 쓰기</span></div>
     <div class="row"><span class="n">5</span><h3>GitHub 기초</h3><span class="r">말로 올리고 받기</span></div>
@@ -388,13 +388,13 @@
       <thead><tr><th>모드</th><th>뜻</th><th>언제</th></tr></thead>
       <tbody>
         <tr><th>자동 (Auto)</th><td>거의 안 물음, 위험한 건 감시 모델이 막음</td><td>평소</td></tr>
-        <tr><th>Plan</th><td>계획만 세우고 아무것도 안 바꿈</td><td>큰 작업 전에</td></tr>
-        <tr><th>Manual</th><td>고칠 때마다 허락을 물음</td><td>하나하나 볼 때</td></tr>
+        <tr><th>계획(Plan)</th><td>계획만 세우고 아무것도 안 바꿈</td><td>큰 작업 전에</td></tr>
+        <tr><th>수동(Manual)</th><td>고칠 때마다 허락을 물음</td><td>하나하나 볼 때</td></tr>
         <tr><th>Bypass</th><td>검사 없이 전부 실행</td><td>쓰지 않기</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="note">Auto 는 되돌릴 수 없는 삭제, 정보 외부 전송, 강제 덮어쓰기를 막아요. 기본값은 사용자 settings.json 에.</p>
+  <p class="note">자동은 되돌릴 수 없는 삭제, 정보 외부 전송, 강제 덮어쓰기를 막아요. 기본값은 사용자 settings.json 에.</p>
   <div class="pg"><span>Permissions</span><span>13</span></div>
 </section>
 
@@ -444,11 +444,11 @@
 </section>
 
 <section class="slide">
-  <h2>예시: Plan 으로 계획 먼저</h2>
+  <h2>예시: 계획 모드로 먼저 보기</h2>
   <div class="boxes shot big">
     <div><img src="../images/scenes/03-plan.png" alt="증거목록 만들기 전에 계획부터 보기"><p class="cap">재현 그림: 증거목록 만들기 전에 계획부터 보기</p></div>
   </div>
-  <p class="note">Plan 모드에서는 계획만 보여주고 아무것도 바꾸지 않아요</p>
+  <p class="note">계획 모드에서는 계획만 보여주고 아무것도 바꾸지 않아요</p>
   <div class="pg"><span>Example</span><span>17</span></div>
 </section>
 
@@ -548,7 +548,7 @@
     <div><small class="k">/</small><h3>명령, 스킬 목록</h3><p>스킬 이름으로 바로 부르기</p></div>
     <div><small class="k">Ctrl+N</small><h3>새 작업</h3><p>주제가 바뀌면 새로</p></div>
     <div><small class="k">Esc</small><h3>멈추기</h3><p>엉뚱하게 가면 바로</p></div>
-    <div class="on"><small class="k">Plan</small><h3>계획 먼저</h3><p>큰 작업은 계획부터 보기</p></div>
+    <div class="on"><small class="k">계획(Plan)</small><h3>계획 먼저</h3><p>큰 작업은 계획부터 보기</p></div>
   </div>
   <div class="pg"><span>Asking</span><span>25</span></div>
 </section>
@@ -595,7 +595,7 @@
 <section class="slide">
   <h2>작업 사이 오가기</h2>
   <div class="boxes b3">
-    <div><small class="k">Ctrl+N</small><h3>새 작업</h3><p>사이드바 + New 도 같아요</p></div>
+    <div><small class="k">Ctrl+N</small><h3>새 작업</h3><p>사이드바 ＋ 새로 만들기 도 같아요</p></div>
     <div><small class="k">Ctrl+Tab</small><h3>다음 작업으로</h3><p>Ctrl+Shift+Tab 은 이전</p></div>
     <div class="on"><small class="k">Alt+클릭</small><h3>나란히 보기</h3><p>사이드바의 작업을 Alt 누르고 클릭</p></div>
     <div><small class="k">Ctrl+클릭</small><h3>새 창으로</h3><p>작업 하나를 따로 띄우기</p></div>
@@ -1017,7 +1017,7 @@
     <div><small class="k">2</small><h3>기록은 사본으로</h3><p>원본 기록은 폴더에 넣지 않기</p></div>
     <div><small class="k">3</small><h3>개인정보 지우기</h3><p>실명은 A, B 로, 주민번호, 연락처는 삭제</p></div>
     <div><small class="k">4</small><h3>평소엔 자동</h3><p>Bypass 는 쓰지 않기, 모르는 허락은 거절</p></div>
-    <div><small class="k">5</small><h3>큰 작업은 Plan</h3><p>계획을 보고 진행</p></div>
+    <div><small class="k">5</small><h3>큰 작업은 계획(Plan)</h3><p>계획을 보고 진행</p></div>
     <div class="on"><small class="k">6</small><h3>판단은 변호사가</h3><p>Claude 는 초안까지</p></div>
   </div>
   <p class="note"><span class="mk st">Claude 는 초안까지, 책임은 사람</span></p>
