@@ -235,7 +235,7 @@
   <div class="rows" style="gap:12px">
     <div class="row"><span class="n">1</span><h3>Claude Code 란</h3><span class="r">폴더째로 일 맡기기</span></div>
     <div class="row"><span class="n">2</span><h3>화면과 권한 모드</h3><span class="r">볼 곳, 평소엔 Auto</span></div>
-    <div class="row"><span class="n">3</span><h3>일 시키기</h3><span class="r">좋은 지시, 이어서 다듬기</span></div>
+    <div class="row"><span class="n">3</span><h3>일 시키기</h3><span class="r">좋은 지시, 여러 작업 동시에</span></div>
     <div class="row"><span class="n">4</span><h3>CLAUDE.md 와 스킬</h3><span class="r">한 번 적어 두고 계속 쓰기</span></div>
     <div class="row"><span class="n">5</span><h3>GitHub 기초</h3><span class="r">말로 올리고 받기</span></div>
     <div class="row"><span class="n">6</span><h3>안전하게 쓰기</h3><span class="r">원문 확인, 사본, 개인정보</span></div>
@@ -552,6 +552,85 @@
   <div class="pg"><span>Example</span><span>23</span></div>
 </section>
 
+<section class="slide">
+  <h2>여러 작업 동시에</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1200 420" role="img" aria-label="사이드바에 작업 세 개를 열어 계약서 비교, 엑셀 합계, 안내문을 동시에 돌리고 각자 다른 결과 파일을 만드는 그림">
+      <path class="s-l d n" d="M10 20 H 400 V 410 H 10 V 20"/>
+      <text class="s-lab" x="205" y="60" text-anchor="middle">사이드바, Ctrl+N 으로 추가</text>
+      <rect rx="18" class="s-box" x="40" y="90" width="330" height="90"/>
+      <text class="s-t" x="205" y="145" text-anchor="middle">작업 1 계약서 비교</text>
+      <rect rx="18" class="s-box" x="40" y="200" width="330" height="90"/>
+      <text class="s-t" x="205" y="255" text-anchor="middle">작업 2 엑셀 합계</text>
+      <rect rx="18" class="s-box" x="40" y="310" width="330" height="90"/>
+      <text class="s-t" x="205" y="365" text-anchor="middle">작업 3 안내문</text>
+
+      <path class="s-l" d="M370 135 H 640"/>
+      <path class="s-l" d="M370 245 H 640"/>
+      <path class="s-l" d="M370 355 H 640"/>
+      <text class="s-lab" x="505" y="115" text-anchor="middle">동시에</text>
+
+      <rect rx="18" class="s-inv" x="650" y="90" width="520" height="90"/>
+      <text class="s-s i" x="910" y="145" text-anchor="middle">결과물/계약서비교.docx</text>
+      <rect rx="18" class="s-inv" x="650" y="200" width="520" height="90"/>
+      <text class="s-s i" x="910" y="255" text-anchor="middle">결과물/월별합계.xlsx</text>
+      <rect rx="18" class="s-inv" x="650" y="310" width="520" height="90"/>
+      <text class="s-s i" x="910" y="365" text-anchor="middle">결과물/휴무안내.docx</text>
+    </svg>
+  </div>
+  <p class="note">끝나면 Windows 알림이 와요. 앱이 켜져 있는 동안만 돌아가요.</p>
+  <div class="pg"><span>Parallel</span><span>24</span></div>
+</section>
+
+<section class="slide">
+  <h2>작업 사이 오가기</h2>
+  <div class="boxes b3">
+    <div><small class="k">Ctrl+N</small><h3>새 작업</h3><p>사이드바 + New 도 같아요</p></div>
+    <div><small class="k">Ctrl+Tab</small><h3>다음 작업으로</h3><p>Ctrl+Shift+Tab 은 이전</p></div>
+    <div class="on"><small class="k">Alt+클릭</small><h3>나란히 보기</h3><p>사이드바의 작업을 Alt 누르고 클릭</p></div>
+    <div><small class="k">Ctrl+클릭</small><h3>새 창으로</h3><p>작업 하나를 따로 띄우기</p></div>
+    <div><small class="k">Ctrl+Alt+W</small><h3>나란히 끝내기</h3><p>한 화면으로 돌아오기</p></div>
+    <div><small class="k">Esc</small><h3>그 작업만 멈춤</h3><p>다른 작업은 계속 돌아감</p></div>
+  </div>
+  <div class="pg"><span>Parallel</span><span>25</span></div>
+</section>
+
+<section class="slide">
+  <h2>같은 파일은 한 작업만</h2>
+  <div class="ba">
+    <div>
+      <div class="lbl">이러면 안 돼요</div>
+      <h3>두 작업이 같은 파일을</h3>
+      <div class="src"><span>작업 1 → 보고서.docx</span><span>작업 2 → 보고서.docx</span></div>
+      <div class="res">서로 <b>덮어써요</b></div>
+    </div>
+    <div>
+      <div class="lbl">이렇게</div>
+      <h3>작업마다 다른 파일</h3>
+      <div class="src"><span>보고서_요약.docx</span><span>보고서_표.xlsx</span></div>
+      <div class="res">같은 문서 다듬기는 <b>한 작업 안에서</b></div>
+    </div>
+  </div>
+  <p class="note"><span class="mk">동시에 돌릴 땐 결과 파일 이름을 다르게</span></p>
+  <div class="pg"><span>Parallel</span><span>26</span></div>
+</section>
+
+<section class="slide">
+  <h2>예시: 세 가지 일 한꺼번에</h2>
+  <div class="boxes b3">
+    <div><small class="k">작업 1</small><h3>계약서 비교</h3><p>"두 계약서의 바뀐 조항만 표로, 결과물/계약서비교.docx 로"</p></div>
+    <div><small class="k">작업 2</small><h3>엑셀 합계</h3><p>"거래내역 월별 합계를 결과물/월별합계.xlsx 로"</p></div>
+    <div><small class="k">작업 3</small><h3>안내문</h3><p>"12월 휴무 안내문을 결과물/휴무안내.docx 로"</p></div>
+  </div>
+  <div class="figs">
+    <div><div class="v">3개</div><div class="k2">Ctrl+N 세 번</div></div>
+    <div><div class="v">동시에</div><div class="k2">기다리지 않고 다음 일</div></div>
+    <div><div class="v">알림</div><div class="k2">끝나는 대로 확인</div></div>
+    <div><div class="v">다른 이름</div><div class="k2">결과 파일은 각자</div></div>
+  </div>
+  <div class="pg"><span>Example</span><span>27</span></div>
+</section>
+
 <!-- 4. CLAUDE.md + skills -->
 <section class="slide" data-scrib="flask" id="s4">
   <h2>4. CLAUDE.md 와 스킬</h2>
@@ -587,7 +666,7 @@
       </ul>
     </div>
   </div>
-  <div class="pg"><span>CLAUDE.md</span><span>24</span></div>
+  <div class="pg"><span>CLAUDE.md</span><span>28</span></div>
 </section>
 
 <section class="slide">
@@ -606,7 +685,7 @@
       <div class="res">숫자에 <b>원문 확인 필요</b> 표시</div>
     </div>
   </div>
-  <div class="pg"><span>Example</span><span>25</span></div>
+  <div class="pg"><span>Example</span><span>29</span></div>
 </section>
 
 <section class="slide">
@@ -616,7 +695,7 @@
     <div class="ai"><span class="who">🤖 Claude</span>CLAUDE.md 에 두 줄을 추가했어요. "결과 파일은 Word 로 저장한다", "파일 이름은 YYYY-MM-DD 내용 형식". 다음 작업부터 이 규칙을 따를게요.</div>
   </div>
   <p class="note">CLAUDE.md 를 직접 열어서 고칠 필요가 없어요</p>
-  <div class="pg"><span>Example</span><span>26</span></div>
+  <div class="pg"><span>Example</span><span>30</span></div>
 </section>
 
 <section class="slide">
@@ -628,7 +707,7 @@
     <div><small class="k">Step 4</small><h3>다음에 확인</h3><p>다음 작업에서 지키는지 보기</p></div>
   </div>
   <p class="note"><span class="mk st">말로만 하면 다음 작업에서 잊어요, 규칙으로 남기기</span></p>
-  <div class="pg"><span>Mistakes</span><span>27</span></div>
+  <div class="pg"><span>Mistakes</span><span>31</span></div>
 </section>
 
 <section class="slide">
@@ -639,7 +718,7 @@
     <div class="me"><span class="who">🙋 나</span>앞으로 자료 폴더는 절대 수정하지 마. CLAUDE.md 에 적고, 설정에도 금지 규칙으로 넣어줘</div>
     <div class="ai"><span class="who">🤖 Claude</span>두 군데에 넣었어요. CLAUDE.md 에 "자료/ 는 읽기만", settings.json 에 자료/ 수정 금지. 이제 실수로 고치려 해도 실행되지 않아요.</div>
   </div>
-  <div class="pg"><span>Example</span><span>28</span></div>
+  <div class="pg"><span>Example</span><span>32</span></div>
 </section>
 
 <section class="slide">
@@ -660,7 +739,7 @@
     <div><div class="v">원본</div><div class="k2">"자료/ 수정 금지" → CLAUDE.md + 설정</div></div>
     <div><div class="v">노력 vs 차단</div><div class="k2">CLAUDE.md 는 지키려 노력, 설정은 아예 막힘</div></div>
   </div>
-  <div class="pg"><span>Mistakes</span><span>29</span></div>
+  <div class="pg"><span>Mistakes</span><span>33</span></div>
 </section>
 
 <section class="slide">
@@ -674,7 +753,7 @@
   </div>
   <div class="alert">SKILL.md 생김새<code>name: 안내문 &nbsp;/ &nbsp;description: 고객 안내문 초안을 쓸 때 사용. 요점, 일정, 문의처 순서로.</code></div>
   <p class="note">description 이 제일 중요, Claude 가 이걸 보고 꺼낼지 정해요</p>
-  <div class="pg"><span>Skills</span><span>30</span></div>
+  <div class="pg"><span>Skills</span><span>34</span></div>
 </section>
 
 <section class="slide">
@@ -686,7 +765,7 @@
     <div class="ai"><span class="who">🤖 Claude</span>안내문 스킬대로 썼어요. <code>결과물/2026-12-01 휴무 안내문.docx</code></div>
   </div>
   <p class="note">다음부터는 짧게만 말해도 같은 방식으로</p>
-  <div class="pg"><span>Example</span><span>31</span></div>
+  <div class="pg"><span>Example</span><span>35</span></div>
 </section>
 
 <!-- 5. GitHub -->
@@ -717,7 +796,7 @@
     </svg>
   </div>
   <p class="note">명령어는 몰라도 돼요. "GitHub 에 올려줘", "받아줘" 라고 말로 시키면 Claude 가 해요.</p>
-  <div class="pg"><span>GitHub</span><span>32</span></div>
+  <div class="pg"><span>GitHub</span><span>36</span></div>
 </section>
 
 <section class="slide">
@@ -751,7 +830,7 @@
       </ul>
     </div>
   </div>
-  <div class="pg"><span>GitHub</span><span>33</span></div>
+  <div class="pg"><span>GitHub</span><span>37</span></div>
 </section>
 
 <section class="slide">
@@ -771,7 +850,7 @@
     </div>
   </div>
   <p class="note">.gitignore 는 "올리지 말 것" 목록 파일, 폴더 이름을 한 줄씩 적어요</p>
-  <div class="pg"><span>GitHub</span><span>34</span></div>
+  <div class="pg"><span>GitHub</span><span>38</span></div>
 </section>
 
 <section class="slide">
@@ -782,7 +861,7 @@
     <div class="me"><span class="who">🙋 나</span>다른 PC 에서 고친 거 받아줘</div>
   </div>
   <p class="note">올리기는 push, 받기는 pull, 말로 시키면 돼요</p>
-  <div class="pg"><span>Example</span><span>35</span></div>
+  <div class="pg"><span>Example</span><span>39</span></div>
 </section>
 
 <section class="slide">
@@ -798,7 +877,7 @@
     </table>
   </div>
   <p class="note"><span class="mk">올리기에 실패해도 작업한 내용은 PC 에 안전하게 남아요</span></p>
-  <div class="pg"><span>GitHub</span><span>36</span></div>
+  <div class="pg"><span>GitHub</span><span>40</span></div>
 </section>
 
 <!-- 6. safety -->
@@ -813,7 +892,7 @@
     <div class="on"><small class="k">6</small><h3>판단은 사람이</h3><p>Claude 는 초안까지</p></div>
   </div>
   <p class="note"><span class="mk st">Claude 는 초안까지, 책임은 사람</span></p>
-  <div class="pg"><span>Safety</span><span>37</span></div>
+  <div class="pg"><span>Safety</span><span>41</span></div>
 </section>
 
 <section class="slide">
@@ -831,7 +910,7 @@
     </div>
   </div>
   <div class="alert">원문 확인 표시 예<code>대금 지급 기한은 납품 후 60일입니다 (원문 확인 필요: 계약서 5조)</code></div>
-  <div class="pg"><span>Example</span><span>38</span></div>
+  <div class="pg"><span>Example</span><span>42</span></div>
 </section>
 
 <section class="slide">
@@ -849,7 +928,7 @@
     </div>
   </div>
   <p class="note"><span class="mk">한 번 적어 둔 규칙과 스킬이 다음 작업을 빠르게</span></p>
-  <div class="pg"><span>Wrap-up</span><span>39</span></div>
+  <div class="pg"><span>Wrap-up</span><span>43</span></div>
 </section>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
