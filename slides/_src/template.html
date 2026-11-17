@@ -1,0 +1,972 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dotfile 칠판 스케치</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&family=Gaegu:wght@400;700&family=Gowun+Dodum&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+  /* Chalkboard: dark slate with eraser smudges and a chalk ledge, chalk strokes via rough.js + grain filters */
+  :root {
+    --board: #2B2E32; --board-hi: #383C41; --board-lo: #1B1D20;
+    --ink: #F3F1E7; --ink-2: #D6D8D4; --ink-3: #9A9E9C;
+    --blue: #8ED1FC; --pink: #FF9EC4; --orange: #FFC078; --purple: #D0BFFF;
+    --green: #B2F2BB; --red: #FF8A8A; --yellow: #FFE380;
+    --hand: "Gamja Flower", "Gowun Dodum", cursive;
+    --title: "Nanum Pen Script", "Gamja Flower", cursive;
+    --font: "Gaegu", "Gowun Dodum", sans-serif;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-snap-type: y mandatory; }
+  body { background: var(--board-lo); color: var(--ink); font-family: var(--font); font-size: 27px; line-height: 1.6; word-break: keep-all; text-shadow: 0 0 1px rgba(243, 241, 231, .35); }
+
+  .slide {
+    min-height: 100vh; scroll-snap-align: start; position: relative; padding: 68px 7vw 100px; display: flex; flex-direction: column; justify-content: center;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.1 -.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='1000' preserveAspectRatio='none'%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0018 .0065' numOctaves='3' seed='8'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.5 -.62'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)' opacity='.1'/%3E%3C/svg%3E") 0 0 / 100% 100%,
+      radial-gradient(ellipse 55% 40% at 28% 32%, rgba(255, 255, 255, .04), transparent 70%),
+      radial-gradient(ellipse 120% 100% at 50% 45%, var(--board-hi) 0%, var(--board) 55%, var(--board-lo) 100%);
+  }
+  .pg { position: absolute; left: 7vw; right: 7vw; bottom: 42px; display: flex; justify-content: space-between; font-family: var(--hand); font-size: 23px; color: var(--ink-3); }
+
+  /* chalk ledge along the bottom, fixed over every slide (no frame) */
+  .ledge { position: fixed; left: 0; right: 0; bottom: 0; height: 22px; z-index: 6; pointer-events: none;
+    background: linear-gradient(#B07A4A 0 3px, #94653C 3px 60%, #7A512F); box-shadow: 0 -6px 14px rgba(0, 0, 0, .45); }
+  .ledge i { position: absolute; bottom: 22px; height: 11px; border-radius: 6px; box-shadow: 0 2px 2px rgba(0, 0, 0, .35); }
+  .ledge .c1 { left: 3%; width: 22px; background: linear-gradient(#FFFFFF, #D9D9D4); }
+  .ledge .c2 { left: 8%; width: 150px; background: linear-gradient(#D6F5DA, #A8D8AE); }
+  .ledge .c3 { left: 21%; width: 160px; background: linear-gradient(#BFE3FF, #84BDEB); transform: rotate(-3deg); bottom: 25px; }
+  .ledge .c4 { left: 35%; width: 150px; background: linear-gradient(#FFF6C8, #E9DB98); }
+  .ledge .er { left: 56%; width: 170px; height: 40px; border-radius: 4px 4px 2px 2px;
+    background: linear-gradient(#F2E6B8 0 72%, #B9362F 72%); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .2), 0 3px 4px rgba(0, 0, 0, .4); }
+  .ledge .c5 { left: 72%; width: 150px; background: linear-gradient(#FFFFFF, #D9D9D4); }
+
+  h1, h2, h3, .row .n, .figs .v, .score .v, .cat .cn, .q, .lbl, small.k, .hand, .legend, .key { font-family: var(--hand); }
+  h1, h2 { font-family: var(--title); }
+  h1 { font-weight: 400; font-size: clamp(110px, 15.5vw, 240px); line-height: .9; }
+  h2 { font-weight: 400; font-size: clamp(56px, 6.6vw, 92px); line-height: 1.05; margin-bottom: 32px; align-self: flex-start; }
+  h3 { font-weight: 700; font-size: 34px; line-height: 1.25; }
+  small.k, .q, .lbl { display: inline-block; align-self: flex-start; font-size: 30px; font-weight: 700; color: var(--ink); padding: 4px 22px; margin-bottom: 14px; position: relative; z-index: 0; }
+  .hl { position: relative; z-index: 0; }
+
+  /* chalk grain on titles and big numbers */
+  h1, .slide h2, .figs .v, .cat .cn, .trk .pct, .row .n { filter: url(#chalk-text); }
+
+  /* every sketched element: transparent, rough.js draws the chalk outline behind it */
+  .sk { position: relative; z-index: 0; }
+  .sk > svg.rough, .rough-crayon { filter: url(#chalk); }
+  .sk > svg.rough { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); z-index: -1; pointer-events: none; overflow: visible; }
+  .hl-svg { position: absolute; z-index: -1; pointer-events: none; overflow: visible; }
+
+  .rows { display: grid; gap: 18px; }
+  .row { display: grid; grid-template-columns: 76px 1fr auto; gap: 20px; align-items: center; padding: 18px 28px; }
+  .row .n { width: 56px; height: 56px; display: grid; place-items: center; font-size: 36px; font-weight: 700; color: var(--yellow); }
+  .row h3 { font-size: clamp(30px, 3.2vw, 44px); }
+  .row .r { color: var(--ink-2); font-size: 22px; }
+
+  .boxes { display: grid; gap: 18px; }
+  .boxes > * { padding: 22px; display: block; }
+  .b3 { grid-template-columns: repeat(3, 1fr); }
+  .b2 { grid-template-columns: repeat(2, 1fr); }
+  .b5 { grid-template-columns: repeat(5, 1fr); }
+  .boxes p { color: var(--ink-2); margin-top: 4px; font-size: 21px; }
+
+  .figs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 18px; }
+  .figs > div { padding: 18px 24px; }
+  .figs .v { font-size: 56px; font-weight: 700; line-height: 1; }
+  .figs > div:first-child .v { color: var(--yellow); }
+  .figs .k2 { font-size: 20px; color: var(--ink-2); }
+
+  .why { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .why > div { padding: 28px 30px; }
+  .q, .lbl { font-size: 34px; }
+  .why ul { list-style: none; }
+  .why li { padding: 9px 0 9px 30px; position: relative; font-size: 23px; }
+  .why li::before { content: "✓"; font-family: var(--hand); font-weight: 700; position: absolute; left: 2px; top: 6px; color: var(--ink-3); font-size: 26px; }
+  .why .fx li::before { color: var(--pink); }
+  .why li b, .res b, .logline b { font-weight: 700; color: var(--yellow); }
+
+  .qa { display: grid; grid-template-columns: 1fr 1.4fr; gap: 22px; }
+  .qa > div { padding: 28px; }
+  .qa h3 { font-size: clamp(28px, 2.8vw, 38px); margin: 2px 0 10px; }
+  .qa p { font-size: 22px; color: var(--ink-2); }
+  .qa .ev { margin-top: 14px; padding-top: 12px; border-top: 2px dashed var(--ink-3); font-size: 20px; color: var(--ink-2); }
+  .qa .ev code { font-family: var(--font); font-weight: 700; font-size: 22px; color: var(--ink); }
+  .score { display: grid; grid-template-columns: auto auto auto 1fr; gap: 18px; margin-top: 18px; align-items: stretch; }
+  .score > div { padding: 14px 22px; }
+  .score > div:last-child { color: var(--ink-2); font-size: 20px; display: flex; align-items: center; }
+  .score .v { font-size: 46px; font-weight: 700; line-height: 1; }
+  .score > div:first-child .v { color: var(--green); }
+  .score .k2 { font-size: 20px; color: var(--ink-2); }
+
+  .cat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .cat > div { padding: 24px 26px; }
+  .cat .cn { font-size: 56px; font-weight: 700; line-height: 1; color: var(--blue); }
+  .cat > div:nth-child(2) .cn { color: var(--green); }
+  .cat > div:nth-child(3) .cn { color: var(--pink); }
+  .cat h3 { margin: 6px 0 0; font-size: 36px; }
+  .cat .use { color: var(--ink-2); font-size: 20px; margin-bottom: 10px; }
+  .cat ul { list-style: none; }
+  .cat li { padding: 7px 0; border-top: 1.5px dashed rgba(243, 241, 231, .35); font-size: 21px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+
+  .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .ba > div { padding: 26px 28px; }
+  .ba .res { margin-top: 16px; padding-top: 12px; border-top: 2px dashed rgba(243, 241, 231, .35); font-size: 22px; }
+  .src { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .src span { padding: 12px; font-size: 21px; text-align: center; color: var(--ink-2); }
+  .hand { text-align: center; font-size: 29px; font-weight: 700; margin-top: 12px; color: var(--red); }
+  .hand::before { content: "↓ 손으로 대조 ↓"; display: block; }
+  .logline { font-family: var(--font); font-weight: 700; font-size: 24px; line-height: 1.9; padding: 16px; overflow-wrap: anywhere; color: var(--ink-2); }
+  .sub2 { margin-top: 18px; font-size: 21px; color: var(--ink-2); }
+
+  .bar { display: flex; height: 62px; margin: 10px 0 4px; }
+  .bar i { display: flex; align-items: center; justify-content: center; font-style: normal; font-family: var(--hand); font-weight: 700; font-size: 28px; position: relative; z-index: 0; }
+  .bar .seen { color: var(--ink); }
+  .bar .blind { color: var(--red); }
+  .legend { display: flex; justify-content: space-between; font-size: 23px; color: var(--ink-2); }
+
+  .repos { display: grid; grid-template-columns: repeat(11, 1fr); gap: 8px; margin: 4px 0 10px; }
+  .repos i { aspect-ratio: 1; display: block; }
+  .key { display: flex; gap: 18px; font-size: 23px; color: var(--ink-2); flex-wrap: wrap; }
+  .alert { padding: 18px 20px; font-size: 26px; font-family: var(--hand); font-weight: 700; }
+  .alert code { display: block; font-family: var(--font); font-size: 24px; font-weight: 400; margin-top: 6px; color: var(--blue); }
+
+  .ref { font-size: .82em; color: var(--ink-3); white-space: nowrap; margin-left: 2px; }
+  .note { margin-top: 20px; font-size: 21px; color: var(--ink-2); }
+
+  /* diagram: originals hidden, rough chalk copies drawn by script */
+  .diagram svg { width: 100%; height: auto; display: block; max-width: 1200px; overflow: visible; }
+  .diagram .s-box, .diagram .s-inv, .diagram .s-l { visibility: hidden; }
+  .s-t { font-family: var(--hand); font-weight: 700; font-size: 30px; fill: var(--ink); }
+  .s-t.i { fill: var(--yellow); }
+  .s-s.i { fill: var(--ink); }
+  .s-s { font-family: var(--font); font-size: 21px; fill: var(--ink-2); }
+  .s-lab { font-family: var(--hand); font-weight: 700; font-size: 27px; fill: var(--blue); }
+  .s-ah { display: none; }
+
+  /* cover */
+  .cover { align-items: flex-start; overflow: hidden; }
+  .cover h1 { position: relative; z-index: 1; line-height: .85; }
+  .cover h1 span { color: var(--pink); }
+  .cover svg.doodle { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  /* faint doodles in a slide's empty corner, and a clumsy star + underline on a takeaway line */
+  .slide { isolation: isolate; }
+  svg.scrib { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: .3; }
+  .mk { position: relative; z-index: 0; white-space: nowrap; }
+  .mk > svg { position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none; overflow: visible; }
+
+  .nav { position: fixed; right: calc(7vw - 8px); top: 22px; display: flex; gap: 10px; z-index: 8; }
+  .nav button { font: 700 22px var(--hand); background: transparent; color: var(--ink-3); border: 0; padding: 6px 12px; cursor: pointer; }
+  .nav button:hover { color: var(--yellow); }
+
+  @media (max-width: 800px) {
+    .slide { padding: 72px 18px 92px; }
+    .pg { left: 18px; right: 18px; bottom: 32px; }
+    .nav { right: 14px; top: 12px; }
+    .ledge { height: 12px; }
+    .ledge i { display: none; }
+    .b3, .b2, .b5, .why, .qa, .cat, .ba, .figs, .score { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 56px 1fr; padding: 16px; }
+    .row .r { grid-column: 2; }
+  }
+
+  /* deck extras: paired bars, table, quote line */
+  .tt { font-family: var(--title); font-size: 44px; color: var(--ink-2); margin: -16px 0 22px; }
+  .boxes p.ref { display: block; margin: 8px 0 0; color: var(--ink-3); font-size: 18px; }
+  .cmp + .legend { margin-top: 22px; }
+  .cmp.rate { grid-template-columns: 170px 1fr; }
+  .cmp .t small { display: block; font-family: var(--font); font-weight: 400; font-size: 18px; color: var(--ink-3); line-height: 1.2; }
+  .trk > div { padding: 18px 20px; display: flex; flex-direction: column; }
+  .trk .pct { position: absolute; right: 18px; top: 16px; font-family: var(--hand); font-weight: 700; font-size: 34px; line-height: 1; color: var(--blue); }
+  .trk .gauge { display: block; height: 18px; margin-top: auto; }
+  .trk p { margin-bottom: 10px; font-size: 19px; }
+  .trk .meta p, .trk .meta h3 { color: var(--ink-3); }
+  .trk h3 { font-size: 30px; }
+  .ba h3 { font-size: 32px; margin: 4px 0 14px; }
+  .ba .key { margin-top: 4px; }
+  .b2 h3 { font-size: 30px; overflow-wrap: anywhere; }
+  .cmp { display: grid; grid-template-columns: 110px 1fr; gap: 14px 24px; align-items: center; }
+  .cmp .t { font-family: var(--hand); font-size: 34px; font-weight: 700; }
+  .cmp .pair { display: grid; gap: 6px; }
+  .cmp .bar { height: 36px; margin: 0; align-items: center; }
+  .cmp .bar i { height: 100%; }
+  .cmp .bar b { font-family: var(--hand); font-size: 27px; margin-left: 12px; }
+  .tblw { padding: 10px 18px; align-self: stretch; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 25px; }
+  .tbl th, .tbl td { padding: 9px 14px; text-align: center; border-bottom: 1.5px dashed rgba(243, 241, 231, .3); }
+  .tbl tbody tr:last-child th, .tbl tbody tr:last-child td { border-bottom: 0; }
+  .tbl th { font-family: var(--hand); font-weight: 700; font-size: 28px; }
+  .tbl thead th { color: var(--yellow); }
+  .tbl tbody th { text-align: left; white-space: nowrap; color: var(--ink-2); }
+</style>
+</head>
+<body>
+
+<div class="ledge" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><i class="er"></i><i class="c5"></i></div>
+<div class="nav"><button id="prev">Prev</button><button id="next">Next</button></div>
+
+<section class="slide cover">
+  <h1>dotfile<br><span>스케치</span></h1>
+</section>
+
+<section class="slide" data-scrib="checklist">
+  <h2>이번 이야기</h2>
+  <div class="rows">
+    <div class="row"><span class="n">1</span><h3>설정 파일</h3><span class="r">~/dotfile 한 곳에</span></div>
+    <div class="row"><span class="n">2</span><h3>tmux</h3><span class="r">한글 키, 세션 자동 복구</span></div>
+    <div class="row"><span class="n">3</span><h3>vim</h3><span class="r">자동완성, vim-go</span></div>
+    <div class="row"><span class="n">4</span><h3>컴퓨터별 현황</h3><span class="r"></span></div>
+    <div class="row"><span class="n">5</span><h3>Claude 와 같이</h3><span class="r">알림, 끝난 창 찾기</span></div>
+  </div>
+  <div class="pg"><span>Overview</span><span>02</span></div>
+</section>
+
+<!-- 1. dotfile -->
+<section class="slide" data-scrib="docs" id="s1">
+  <h2>1. 설정 파일 한 곳에</h2>
+  <div class="lbl">~/dotfile 에서 링크</div>
+  <div class="bar"><i class="seen" style="width:50.5%">tmux.conf, vimrc</i></div>
+  <div class="bar"><i class="seen" style="width:100%">tmux 스크립트 3개, shell 설정까지 전부</i></div>
+  <div class="figs">
+    <div><div class="v">122</div><div class="k2">tmux.conf 줄 수</div></div>
+    <div><div class="v">67</div><div class="k2">vimrc 줄 수</div></div>
+    <div><div class="v">3</div><div class="k2">tmux 스크립트 (세션, URL, 벨)</div></div>
+    <div><div class="v">3</div><div class="k2">tmux 플러그인 (tpm 포함)</div></div>
+  </div>
+  <p class="note">줄 수는 이 덱을 만들 때 기준 <span class="ref">terminal/, vim/</span></p>
+  <div class="pg"><span>dotfile</span><span>03</span></div>
+</section>
+
+<section class="slide">
+  <h2>새 컴퓨터 세팅</h2>
+  <div class="ba">
+    <div>
+      <div class="lbl">손으로 하면</div>
+      <div class="src">
+        <span>설정 파일 복사</span><span>플러그인 clone</span>
+      </div>
+      <div class="res">하나라도 빠뜨리면 컴퓨터마다 <b>조금씩</b> 달라짐 <span class="ref">예시</span></div>
+    </div>
+    <div>
+      <div class="lbl">지금</div>
+      <div class="src">
+        <span style="grid-column:1/-1">./install.sh 한 번</span>
+      </div>
+      <div class="res">링크, 플러그인, 글꼴까지, 기존 파일은 <b>백업</b> 후 교체 <span class="ref">install.sh</span></div>
+    </div>
+  </div>
+  <div class="pg"><span>dotfile</span><span>04</span></div>
+</section>
+
+<section class="slide">
+  <h2>tmux 스크립트 셋</h2>
+  <div class="boxes b3">
+    <div><small class="k">prefix f</small><h3>tmux-sessionizer</h3><p>프로젝트를 고르면 claude, shell 두 칸짜리 세션</p><p class="ref">terminal/tmux-sessionizer</p></div>
+    <div><small class="k">prefix u</small><h3>tmux-open-url</h3><p>스크롤백의 URL 을 fzf 로 골라 브라우저로</p><p class="ref">terminal/tmux-open-url</p></div>
+    <div class="on"><small class="k">prefix b</small><h3>tmux-next-bell</h3><p>Claude 작업이 끝난 창으로 바로 이동, 다른 세션까지</p><p class="ref">terminal/tmux-next-bell</p></div>
+  </div>
+  <div class="pg"><span>tmux</span><span>05</span></div>
+</section>
+
+<!-- 2. tmux -->
+<section class="slide" data-scrib="anvil" id="s2">
+  <h2>2. tmux</h2>
+  <div class="why">
+    <div>
+      <div class="q">왜</div>
+      <ul>
+        <li>한글 입력 중에는 <b>prefix 뒤 키가</b> 안 먹음</li>
+        <li>WSL 을 다시 켜면 <b>세션이 사라짐</b></li>
+        <li>Claude 작업이 끝난 창을 <b>찾아다녀야</b> 함</li>
+      </ul>
+    </div>
+    <div class="fx">
+      <div class="q">효과</div>
+      <ul>
+        <li>한글 상태에서도 <b>같은 키</b>로 동작</li>
+        <li>10분마다 <b>자동 저장</b>, 켜면 복구</li>
+        <li>끝난 창은 <b>빨간색</b>, prefix b 로 이동</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pg"><span>Why / Effect</span><span>06</span></div>
+</section>
+
+<section class="slide">
+  <h2>tmux 구조: 세션</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1200 470" role="img" aria-label="프로젝트 폴더를 sessionizer 로 고르면 claude, shell 두 칸 세션이 열리고, 저장과 복구는 플러그인이 맡는 구조">
+      <rect rx="18" class="s-box" x="10" y="10" width="230" height="100"/>
+      <text class="s-t" x="125" y="55" text-anchor="middle">~/work</text>
+      <text class="s-s" x="125" y="88" text-anchor="middle">프로젝트 폴더</text>
+      <rect rx="18" class="s-box" x="10" y="125" width="230" height="100"/>
+      <text class="s-t" x="125" y="170" text-anchor="middle">~/dotfile</text>
+      <text class="s-s" x="125" y="203" text-anchor="middle">설정</text>
+      <rect rx="18" class="s-box" x="10" y="240" width="230" height="100"/>
+      <text class="s-t" x="125" y="285" text-anchor="middle">~/.claude</text>
+      <text class="s-s" x="125" y="318" text-anchor="middle">Claude 설정</text>
+      <rect rx="18" class="s-box" x="10" y="355" width="230" height="100"/>
+      <text class="s-t" x="125" y="400" text-anchor="middle">~</text>
+      <text class="s-s" x="125" y="433" text-anchor="middle">home</text>
+
+      <path class="s-l n" d="M240 60 H 290"/><path class="s-l n" d="M240 175 H 290"/>
+      <path class="s-l n" d="M240 290 H 290"/><path class="s-l n" d="M240 405 H 290"/>
+      <path class="s-l n" d="M290 60 V 405"/>
+      <path class="s-l" d="M290 232 H 340"/>
+      <text class="s-lab" x="450" y="160" text-anchor="middle">fzf 로 고르기</text>
+
+      <rect rx="18" class="s-box" x="350" y="175" width="200" height="115"/>
+      <text class="s-t" x="450" y="225" text-anchor="middle">sessionizer</text>
+      <text class="s-s" x="450" y="258" text-anchor="middle">t, prefix f</text>
+
+      <path class="s-l" d="M550 232 H 600"/>
+
+      <rect rx="18" class="s-inv" x="610" y="95" width="330" height="275"/>
+      <text class="s-t i" x="775" y="150" text-anchor="middle">세션 하나</text>
+      <text class="s-s i" x="775" y="200" text-anchor="middle">claude pane 60%</text>
+      <text class="s-s i" x="775" y="232" text-anchor="middle">shell pane 40%</text>
+      <text class="s-s i" x="775" y="264" text-anchor="middle">같은 폴더에서 시작</text>
+      <text class="s-s i" x="775" y="296" text-anchor="middle">있으면 그 세션으로</text>
+
+      <path class="s-l" d="M940 232 H 965"/>
+      <path class="s-l d n" d="M972 70 H 1195 V 420 H 972 V 70"/>
+      <text class="s-lab" x="1083" y="58" text-anchor="middle">플러그인 (자동)</text>
+      <rect rx="18" class="s-box" x="990" y="95" width="185" height="130"/>
+      <text class="s-t" x="1082" y="148" text-anchor="middle">저장</text>
+      <text class="s-s" x="1082" y="185" text-anchor="middle">10분마다</text>
+      <rect rx="18" class="s-box" x="990" y="265" width="185" height="130"/>
+      <text class="s-t" x="1082" y="318" text-anchor="middle">복구</text>
+      <text class="s-s" x="1082" y="355" text-anchor="middle">tmux 켤 때</text>
+    </svg>
+  </div>
+  <p class="note">프로젝트마다 세션 하나, 저장과 복구는 tmux-resurrect, tmux-continuum 이 알아서</p>
+  <div class="pg"><span>tmux</span><span>07</span></div>
+</section>
+
+<section class="slide">
+  <h2>알림 흐름</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1200 470" role="img" aria-label="Claude Code 훅이 notify 스크립트를 부르면 30초 기준으로 데스크톱 알림과 tmux 벨을 보내는 구조">
+      <rect rx="18" class="s-box" x="10" y="185" width="220" height="100"/>
+      <text class="s-t" x="120" y="230" text-anchor="middle">Claude Code</text>
+      <text class="s-s" x="120" y="263" text-anchor="middle">훅 3개</text>
+      <path class="s-l" d="M230 235 H 280"/>
+
+      <rect rx="18" class="s-box" x="290" y="165" width="250" height="140"/>
+      <text class="s-t" x="415" y="220" text-anchor="middle">notify.sh</text>
+      <text class="s-s" x="415" y="256" text-anchor="middle">걸린 시간 재기</text>
+
+      <path class="s-l" d="M540 195 H 600 V 80 H 650"/>
+      <rect rx="18" class="s-inv" x="660" y="25" width="260" height="110"/>
+      <text class="s-t i" x="790" y="70" text-anchor="middle">데스크톱 알림</text>
+      <text class="s-s i" x="790" y="105" text-anchor="middle">소리 없이, [세션:창]</text>
+      <path class="s-l" d="M920 80 H 955"/>
+      <rect rx="18" class="s-box" x="965" y="25" width="225" height="110"/>
+      <text class="s-t" x="1077" y="70" text-anchor="middle">OS 알림</text>
+      <text class="s-s" x="1077" y="105" text-anchor="middle">Mac, WSL, Linux</text>
+
+      <path class="s-l" d="M540 275 H 600 V 390 H 650"/>
+      <rect rx="18" class="s-inv" x="660" y="335" width="260" height="110"/>
+      <text class="s-t i" x="790" y="380" text-anchor="middle">tmux 벨</text>
+      <text class="s-s i" x="790" y="415" text-anchor="middle">소리 없이 창만 표시</text>
+      <path class="s-l" d="M920 390 H 955"/>
+      <rect rx="18" class="s-box" x="965" y="335" width="225" height="110"/>
+      <text class="s-t" x="1077" y="380" text-anchor="middle">상태바</text>
+      <text class="s-s" x="1077" y="415" text-anchor="middle">빨간 창, prefix b</text>
+
+      <rect rx="18" class="s-inv" x="660" y="180" width="260" height="110"/>
+      <text class="s-t i" x="790" y="225" text-anchor="middle">30초 기준</text>
+      <text class="s-s i" x="790" y="260" text-anchor="middle">짧은 작업은 조용히</text>
+      <path class="s-l d" d="M660 235 H 550"/>
+    </svg>
+  </div>
+  <p class="note"><span class="mk st">알림은 조용히, 어느 창인지는 tmux 상태바가 알려줌</span></p>
+  <div class="pg"><span>tmux</span><span>08</span></div>
+</section>
+
+<section class="slide">
+  <h2>손에 익힌 키 10개</h2>
+  <div class="boxes b5 trk" style="gap:14px">
+    <div data-pct="90"><span class="pct">90%</span><small class="k">A</small><h3>prefix</h3><p>Ctrl+a<br>두 번 누르면 쉘로</p><i class="gauge"></i></div>
+    <div data-pct="80"><span class="pct">80%</span><small class="k">B</small><h3>pane 이동</h3><p>Alt+hjkl<br>prefix hjkl 도 됨</p><i class="gauge"></i></div>
+    <div data-pct="70"><span class="pct">70%</span><small class="k">C</small><h3>분할</h3><p>prefix |, -<br>현재 폴더에서</p><i class="gauge"></i></div>
+    <div data-pct="40"><span class="pct">40%</span><small class="k">D</small><h3>크기 조절</h3><p>prefix HJKL<br>연타 가능</p><i class="gauge"></i></div>
+    <div data-pct="60"><span class="pct">60%</span><small class="k">E</small><h3>복사 모드</h3><p>prefix [, v, y<br>OS 클립보드로</p><i class="gauge"></i></div>
+    <div data-pct="80"><span class="pct">80%</span><small class="k">F</small><h3>세션 고르기</h3><p>prefix f<br>fzf 프로젝트 목록</p><i class="gauge"></i></div>
+    <div class="meta"><small class="k">G</small><h3>설정 다시 읽기</h3><p>prefix r<br>가끔 써서 막대 없음</p></div>
+    <div data-pct="50"><span class="pct">50%</span><small class="k">H</small><h3>URL 열기</h3><p>prefix u<br>스크롤백에서 고르기</p><i class="gauge"></i></div>
+    <div data-pct="70"><span class="pct">70%</span><small class="k">I</small><h3>벨 창 이동</h3><p>prefix b<br>다른 세션까지</p><i class="gauge"></i></div>
+    <div data-pct="20"><span class="pct">20%</span><small class="k">J</small><h3>저장, 복구</h3><p>prefix C-s, C-r<br>평소엔 자동이라</p><i class="gauge"></i></div>
+  </div>
+  <p class="note">막대는 손에 익은 정도를 나타낸 예시 값, 키는 README 의 tmux 사용법 기준 <span class="ref">README.md</span></p>
+  <div class="pg"><span>tmux</span><span>09</span></div>
+</section>
+
+
+<!-- 3. vim -->
+<section class="slide" data-scrib="flask" id="s4">
+  <h2>3. vim</h2>
+  <div class="why">
+    <div>
+      <div class="q">왜</div>
+      <ul>
+        <li>자동완성을 <b>Ctrl+n</b> 으로 직접 불러야 했음</li>
+        <li>Go 파일 저장 때 <b>import 정리</b>가 따로</li>
+        <li>컴퓨터마다 <b>vim 버전</b>이 다름 (8.2, 9.1)</li>
+      </ul>
+    </div>
+    <div class="fx">
+      <div class="q">효과</div>
+      <ul>
+        <li>입력하면 <b>바로</b> 자동완성 팝업 (vim 9.1)</li>
+        <li>저장하면 <b>gopls</b> 가 포맷, import 정리</li>
+        <li>옛 vim 은 <b>알아서</b> 기본 소스로</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pg"><span>Why / Effect</span><span>10</span></div>
+</section>
+
+<section class="slide">
+  <h2>한글 키도 같이</h2>
+  <div class="ba">
+    <div>
+      <div class="lbl">prefix 뒤</div>
+      <h3>한글 상태 그대로</h3>
+      <div class="repos" style="grid-template-columns:repeat(16,1fr)">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <div class="key"><span>ㅋ, ㅇ, ㄹ, ㄴ, ㅊ 등 13개</span></div>
+      <div class="res">한/영 전환 없이 <b>바로</b> 동작</div>
+    </div>
+    <div>
+      <div class="lbl">복사 모드</div>
+      <h3>ㅗㅓㅏㅣ 로 이동</h3>
+      <div class="repos" style="grid-template-columns:repeat(16,1fr)">
+        <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <div class="key"><span>ㅍ, ㅛ, ㅂ 등 10개</span></div>
+      <div class="res">선택, 복사, 닫기도 <b>같은 자리</b></div>
+    </div>
+  </div>
+  <div class="pg"><span>tmux</span><span>11</span></div>
+</section>
+
+<section class="slide">
+  <h2>컴퓨터별로 들어간 곳</h2>
+  <div class="boxes b2">
+    <div><small class="k">Mac, zsh</small><h3>~/.zshrc → common.sh</h3><p>Terminal.app 글꼴도 install.sh 가 맞춤</p></div>
+    <div class="on"><small class="k">tmux, 링크</small><h3>~/.tmux.conf</h3><p>모든 컴퓨터가 같은 파일, 고치면 그대로 반영</p></div>
+    <div class="on"><small class="k">vim, 링크</small><h3>~/.vimrc</h3><p>vim-go 는 vim 버전에 맞춰 설치</p></div>
+    <div><small class="k">WSL, bash</small><h3>~/.bashrc → common.sh</h3><p>Windows 글꼴 설치, Windows Terminal 기본 글꼴</p></div>
+  </div>
+  <p class="note">노랑은 링크라서 ~/dotfile 에서 고치면 바로 반영</p>
+  <div class="pg"><span>dotfile</span><span>12</span></div>
+</section>
+
+<section class="slide" id="rate">
+  <h2>키 조합 수</h2>
+  <div class="cmp rate">
+    <div class="t">pane 이동<small>Alt+h/j/k/l</small></div>
+    <div class="pair"><div class="bar"><i class="blind" style="width:50%"></i><b>2번</b></div><div class="bar"><i class="seen" style="width:25%"></i><b>1번</b></div></div>
+    <div class="t">세션 열기<small>t, prefix f</small></div>
+    <div class="pair"><div class="bar"><i class="blind" style="width:100%"></i><b>4번</b></div><div class="bar"><i class="seen" style="width:25%"></i><b>1번</b></div></div>
+    <div class="t">URL 열기<small>prefix u</small></div>
+    <div class="pair"><div class="bar"><i class="blind" style="width:75%"></i><b>3번</b></div><div class="bar"><i class="seen" style="width:50%"></i><b>2번</b></div></div>
+    <div class="t">한글 상태<small>한/영 전환 없이</small></div>
+    <div class="pair"><div class="bar"><i class="blind" style="width:50%"></i><b>2번</b></div><div class="bar"><i class="seen" style="width:25%"></i><b>1번</b></div></div>
+    <div class="t">끝난 창<small>prefix b</small></div>
+    <div class="pair"><div class="bar"><i class="blind" style="width:75%"></i><b>3번</b></div><div class="bar"><i class="seen" style="width:25%"></i><b>1번</b></div></div>
+  </div>
+  <div class="legend"><span>빨강 기본 설정, 파랑 지금</span><span class="mk st">세션 열기 4번 → 1번</span></div>
+  <p class="note">명령이나 키 조합 수로 센 예시 값 (세션 열기는 cd, tmux new, 분할, claude 실행)</p>
+  <div class="pg"><span>tmux</span><span>13</span></div>
+</section>
+
+<!-- 4. status -->
+<section class="slide" data-scrib="chart" id="s5">
+  <h2>4. 컴퓨터별 현황</h2>
+  <div class="tblw">
+    <table class="tbl">
+      <thead><tr><th></th><th>Mac</th><th>WSL</th><th>Linux</th><th>SSH</th></tr></thead>
+      <tbody>
+        <tr><th>터미널</th><td>iTerm2, Ghostty</td><td>Windows Terminal</td><td>아무거나</td><td>쓰던 터미널</td></tr>
+        <tr><th>글꼴</th><td>install.sh</td><td>install.sh</td><td>직접 설치</td><td>로컬 글꼴</td></tr>
+        <tr><th>Alt 키</th><td>Option 설정</td><td>그대로</td><td>그대로</td><td>로컬 따라감</td></tr>
+        <tr><th>복사 (y)</th><td>iTerm2 설정</td><td>OSC 52</td><td>터미널 따라</td><td>터미널 따라</td></tr>
+        <tr><th>URL 열기</th><td>open</td><td>explorer.exe</td><td>xdg-open</td><td>주소만 출력</td></tr>
+        <tr><th>알림</th><td>알림 센터</td><td>토스트</td><td>notify-send</td><td>벨만</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">알림은 notify 플러그인, URL 열기는 tmux-open-url 기준 <span class="ref">claude/plugins/notify</span></p>
+  <div class="pg"><span>Status</span><span>14</span></div>
+</section>
+
+
+<!-- 5. claude -->
+<section class="slide" data-scrib="robot" id="s3">
+  <h2>5. Claude 와 같이</h2>
+  <div class="figs">
+    <div><div class="v">30초</div><div class="k2">넘게 걸리면 알림</div></div>
+    <div><div class="v">60 : 40</div><div class="k2">claude, shell pane</div></div>
+    <div><div class="v">10분</div><div class="k2">세션 자동 저장 간격</div></div>
+    <div><div class="v">50,000</div><div class="k2">스크롤백 줄 수</div></div>
+  </div>
+  <div class="figs">
+    <div><div class="v">0</div><div class="k2">알림 소리 (창 표시만)</div></div>
+    <div><div class="v">1번</div><div class="k2">prefix b 로 끝난 창</div></div>
+    <div><div class="v">3.4+</div><div class="k2">링크 Ctrl+클릭 tmux 버전</div></div>
+    <div><div class="v">10ms</div><div class="k2">Esc 지연 (vim, Claude)</div></div>
+  </div>
+  <p class="note">tmux.conf, notify 기본값 기준 <span class="ref">terminal/tmux.conf</span></p>
+  <div class="pg"><span>Claude</span><span>15</span></div>
+</section>
+
+<section class="slide">
+  <h2>tmux 를 다시 켜면</h2>
+  <div class="cmp">
+    <div class="t">세션</div>
+    <div class="pair"><div class="bar"><i class="blind" style="width:80%"></i><b>직접</b></div><div class="bar"><i class="seen" style="width:8%"></i><b>자동</b></div></div>
+    <div class="t">pane</div>
+    <div class="pair"><div class="bar"><i class="blind" style="width:70%"></i><b>직접</b></div><div class="bar"><i class="seen" style="width:8%"></i><b>자동</b></div></div>
+    <div class="t">화면</div>
+    <div class="pair"><div class="bar"><i class="blind" style="width:60%"></i><b>없음</b></div><div class="bar"><i class="seen" style="width:8%"></i><b>그대로</b></div></div>
+    <div class="t">claude</div>
+    <div class="pair"><div class="bar"><i class="blind" style="width:50%"></i><b>새로</b></div><div class="bar"><i class="seen" style="width:8%"></i><b>이어서</b></div></div>
+    <div class="t">폴더</div>
+    <div class="pair"><div class="bar"><i class="blind" style="width:40%"></i><b>cd 다시</b></div><div class="bar"><i class="seen" style="width:8%"></i><b>그대로</b></div></div>
+  </div>
+  <div class="legend"><span>빨강 플러그인 없이, 파랑 지금</span><span class="mk st">다시 켜도 그대로</span></div>
+  <p class="note">막대는 다시 손이 가는 정도를 나타낸 예시</p>
+  <div class="pg"><span>tmux</span><span>16</span></div>
+</section>
+
+<section class="slide">
+  <h2>아직 손으로 하는 것</h2>
+  <div class="cat">
+    <div>
+      <div class="cn">글꼴</div>
+      <h3>Linux 데스크톱</h3>
+      <div class="use">install.sh 는 Mac, WSL 만 설치</div>
+      <ul>
+        <li>직접 받아서 설치</li>
+        <li>터미널 기본 글꼴로 지정</li>
+      </ul>
+    </div>
+    <div>
+      <div class="cn">Alt</div>
+      <h3>Mac 터미널</h3>
+      <div class="use">Option 키를 Alt 로</div>
+      <ul>
+        <li>iTerm2: Esc+</li>
+        <li>Ghostty: macos-option-as-alt</li>
+        <li>Terminal.app: Option as Meta</li>
+      </ul>
+    </div>
+    <div>
+      <div class="cn">3.4</div>
+      <h3>tmux 버전</h3>
+      <div class="use">Ubuntu 22.04 apt 는 3.2a</div>
+      <ul>
+        <li>소스로 빌드</li>
+        <li>떠 있는 서버는 다시 켜기</li>
+      </ul>
+    </div>
+  </div>
+  <p class="note"><span class="mk">나머지는 install.sh 한 번이면 끝</span></p>
+  <div class="pg"><span>dotfile</span><span>17</span></div>
+</section>
+
+<section class="slide">
+  <h2>자주 쓰는 키 여섯</h2>
+  <p class="tt">"손이 기억하는 키만 남기기"</p>
+  <div class="boxes b3">
+    <div><small class="k">1</small><h3>prefix f</h3><p>프로젝트 세션 열기</p></div>
+    <div><small class="k">2</small><h3>Alt+hjkl</h3><p>pane 이동</p></div>
+    <div><small class="k">3</small><h3>prefix z</h3><p>pane 크게 보기</p></div>
+    <div><small class="k">4</small><h3>prefix u</h3><p>URL 골라 열기</p></div>
+    <div><small class="k">5</small><h3>prefix b</h3><p>끝난 창으로</p></div>
+    <div><small class="k">6</small><h3>prefix [</h3><p>복사 모드, v, y</p></div>
+  </div>
+  <p class="note">README 의 tmux 사용법 표에서 고른 여섯, 나머지는 표 참고</p>
+  <div class="pg"><span>tmux</span><span>18</span></div>
+</section>
+
+<section class="slide">
+  <h2>새 컴퓨터 세팅 순서</h2>
+  <div class="boxes b5">
+    <div><small class="k">Step 1</small><h3>의존성</h3><p>git, tmux, fzf</p></div>
+    <div><small class="k">Step 2</small><h3>받기</h3><p>dotfile 을 ~/dotfile 로</p></div>
+    <div class="on"><small class="k">Step 3</small><h3>install.sh</h3><p>링크, 플러그인, 글꼴</p></div>
+    <div class="on"><small class="k">Step 4</small><h3>터미널</h3><p>글꼴 14pt, Alt 키</p></div>
+    <div><small class="k">Step 5</small><h3>확인</h3><p>prefix r, t</p></div>
+  </div>
+  <div class="figs">
+    <div><div class="v">백업</div><div class="k2">기존 파일은 ~/.dotfile-backup 으로</div></div>
+    <div><div class="v">여러 번</div><div class="k2">다시 실행해도 안전</div></div>
+    <div><div class="v">--dry-run</div><div class="k2">바뀌는 것 미리 보기</div></div>
+    <div><div class="v">3.4+</div><div class="k2">tmux 버전부터 확인</div></div>
+  </div>
+  <div class="pg"><span>dotfile</span><span>19</span></div>
+</section>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="chalk" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G" result="d"/>
+    <feTurbulence type="fractalNoise" baseFrequency="1.9" numOctaves="1" seed="7" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.5 1.45" result="ga"/>
+    <feComposite in="d" in2="ga" operator="in"/>
+  </filter>
+  <filter id="chalk-text" x="-3%" y="-20%" width="106%" height="150%">
+    <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="11" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.5" result="ga"/>
+    <feComposite in="SourceGraphic" in2="ga" operator="in" result="t"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="1" seed="2" result="n"/>
+    <feDisplacementMap in="t" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const P = () => ({
+    ink: css('--ink'), dim: css('--ink-3'), pink: css('--pink'), sky: css('--blue'), green: css('--green'),
+    orange: css('--orange'), yellow: css('--yellow'), red: css('--red'), purple: css('--purple'),
+  });
+  // faint chalk rubbed into a box: same hue as the outline, low alpha, never hatched behind text
+  const tint = { yellow: 'rgba(255, 227, 128, .11)', pink: 'rgba(255, 158, 196, .09)', sky: 'rgba(142, 209, 252, .26)', red: 'rgba(255, 138, 138, .22)' };
+  let seed = 1;
+  const base = o => Object.assign({ roughness: 1.6, bowing: 1.4, strokeWidth: 2.8, seed: seed++ }, o);
+
+  function overlay(el) {
+    el.classList.add('sk');
+    el.querySelectorAll(':scope > svg.rough').forEach(s => s.remove());
+    const s = document.createElementNS(NS, 'svg');
+    s.classList.add('rough');
+    const w = el.offsetWidth + 12, h = el.offsetHeight + 12;
+    s.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    el.prepend(s);
+    return { s, w, h, r: rough.svg(s) };
+  }
+  function box(el, o) {
+    const { s, w, h, r } = overlay(el);
+    s.appendChild(r.rectangle(6, 6, w - 12, h - 12, base(o)));
+  }
+  // progress: plain chalk box, plus a gauge at the bottom filled to pct
+  function progress(el, pct) {
+    const c = P();
+    box(el, { stroke: c.ink });
+    const g = el.querySelector('.gauge');
+    if (!g) return;
+    const { s, w, h, r } = overlay(g);
+    s.appendChild(r.rectangle(6, 6, w - 12, h - 12, base({ stroke: c.dim, strokeWidth: 2, roughness: 1 })));
+    const fw = (w - 12) * pct;
+    if (fw > 2) s.appendChild(r.rectangle(6, 6, fw, h - 12, base({ stroke: 'none', fill: c.sky, fillStyle: 'solid', roughness: 1.1 })));
+  }
+  // a professor circling a word
+  function ring(el, col) {
+    const { s, w, h, r } = overlay(el);
+    s.appendChild(r.ellipse(w / 2, h / 2, w + 4, h + 10, base({ stroke: col, strokeWidth: 2.4, roughness: 1.3, bowing: 0.8 })));
+  }
+  // title: a chalk underline under each text line
+  function underline(h) {
+    if (!h.querySelector('.hlw')) h.innerHTML = `<span class="hlw">${h.innerHTML}</span>`;
+    h.style.position = 'relative'; h.style.zIndex = 0;
+    h.querySelectorAll(':scope > svg.hl-svg').forEach(s => s.remove());
+    const hb = h.getBoundingClientRect();
+    const s = document.createElementNS(NS, 'svg');
+    s.classList.add('hl-svg');
+    s.setAttribute('style', `left:0;top:0;width:${hb.width}px;height:${hb.height}px`);
+    s.setAttribute('viewBox', `0 0 ${hb.width} ${hb.height}`);
+    const r = rough.svg(s);
+    // two loose wavy strokes that cross, like a quick double underline in blue chalk
+    for (const rc of h.querySelector('.hlw').getClientRects()) {
+      const x = rc.left - hb.left - 6, y = rc.bottom - hb.top - rc.height * 0.06, w = rc.width + 14;
+      [[0, 0, 1, 0.7], [Math.PI, 3, 0.94, 0.9]].forEach(([ph, dy, span, f]) => {
+        const pts = Array.from({ length: 9 }, (_, k) => [x + w * span * k / 8, y + dy + 8 * Math.sin(k * f + ph)]);
+        s.appendChild(r.curve(pts, base({ stroke: P().sky, strokeWidth: 3, roughness: 0.9, bowing: 0.6 })));
+      });
+    }
+    h.prepend(s);
+  }
+
+  function diagram() { document.querySelectorAll('.diagram svg').forEach(drawDiagram); }
+  function drawDiagram(svg) {
+    svg.querySelectorAll('.rough-copy').forEach(n => n.remove());
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('rough-copy', 'rough-crayon');
+    svg.prepend(g);
+    const r = rough.svg(svg), c = P();
+    const cols = [c.sky, c.pink, c.green, c.orange];
+    let i = 0;
+    svg.querySelectorAll('rect.s-box, rect.s-inv').forEach(el => {
+      const [x, y, w, h] = ['x', 'y', 'width', 'height'].map(a => +el.getAttribute(a));
+      const inv = el.classList.contains('s-inv');
+      g.appendChild(r.rectangle(x, y, w, h, base(inv
+        ? { stroke: c.yellow, fill: tint.yellow, fillStyle: 'solid', strokeWidth: 3.4 }
+        : { stroke: cols[i++ % cols.length], strokeWidth: 2.8 })));
+    });
+    svg.querySelectorAll('path.s-l').forEach(el => {
+      const pts = []; let x = 0, y = 0;
+      el.getAttribute('d').match(/[MHVL][^MHVL]*/g).forEach(seg => {
+        const k = seg[0], v = seg.slice(1).trim().split(/[\s,]+/).map(Number);
+        if (k === 'M' || k === 'L') { x = v[0]; y = v[1]; }
+        if (k === 'H') x = v[0];
+        if (k === 'V') y = v[0];
+        pts.push([x, y]);
+      });
+      const dashed = el.classList.contains('d');
+      const o = base({ stroke: dashed ? c.purple : c.ink, strokeWidth: 2.8, strokeLineDash: dashed ? [10, 10] : undefined });
+      g.appendChild(r.linearPath(pts, o));
+      if (el.classList.contains('n')) return;                       // plain line, no arrowhead
+      const [x2, y2] = pts[pts.length - 1], [x1, y1] = pts[pts.length - 2];
+      const a = Math.atan2(y2 - y1, x2 - x1), L = 16;
+      for (const da of [2.6, -2.6]) g.appendChild(r.line(x2, y2, x2 + L * Math.cos(a + da), y2 + L * Math.sin(a + da), base({ stroke: o.stroke, strokeWidth: 2.8 })));
+    });
+  }
+
+  // cover: one hill doodle and one sparkle, kept quiet
+  function cover() {
+    const sec = document.querySelector('.cover');
+    if (!sec) return;
+    sec.querySelectorAll('svg.doodle').forEach(n => n.remove());
+    const s = document.createElementNS(NS, 'svg');
+    s.classList.add('doodle', 'rough-crayon');
+    const W = sec.offsetWidth, H = sec.offsetHeight, c = P();
+    s.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    sec.prepend(s);
+    const r = rough.svg(s);
+
+    // two hill strokes in green chalk on the empty right half, like a doodle left on the board
+    const hill = pts => s.appendChild(r.linearPath(pts.map(([x, y]) => [W * x, H * y]), base({ stroke: c.green, strokeWidth: 3, roughness: 1.3, bowing: 1 })));
+    hill([[0.555, 0.62], [0.6, 0.5], [0.645, 0.37], [0.695, 0.47], [0.745, 0.585]]);
+    hill([[0.72, 0.52], [0.775, 0.42], [0.83, 0.32], [0.885, 0.44], [0.94, 0.57]]);
+
+    function sparkle(x, y, R, col) {
+      for (let k = 0; k < 7; k++) {
+        const a = -Math.PI / 2 + (k - 3) * 0.42;
+        s.appendChild(r.line(x + R * 0.45 * Math.cos(a), y + R * 0.45 * Math.sin(a), x + R * Math.cos(a), y + R * Math.sin(a), base({ stroke: col, strokeWidth: 2.4, roughness: 0.8 })));
+      }
+    }
+    // sparkle beside the first title line, read from the rendered title
+    const sb = sec.getBoundingClientRect(), h1 = sec.querySelector('h1');
+    const rg = document.createRange(); rg.selectNodeContents(h1.firstChild);
+    const ab = rg.getBoundingClientRect();
+    sparkle(ab.right - sb.left + 48, ab.top - sb.top + ab.height * 0.55, 44, c.yellow);
+    // two faint doodles in the corners (idea, code), nothing more
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('opacity', '.3');
+    s.appendChild(g);
+    const gr = rough.svg(g);
+    SCRIB.bulb(gr, g, W * 0.86, H * 0.18, 150);
+    SCRIB.code(gr, g, W * 0.12, H * 0.86, 110);
+  }
+
+  // ---- faint chalk doodles that match the slide, one per tagged slide ----
+  // built from sketchnote basics: page = docs, check = test, magnifier = review, bulb = idea
+  const ln = (o) => base(Object.assign({ stroke: P().ink, strokeWidth: 2.2, roughness: 1.1, bowing: 1 }, o));
+  const check = (r, s, x, y, k, o) => s.appendChild(r.linearPath([[x, y], [x + k * 0.35, y + k * 0.4], [x + k, y - k * 0.45]], ln(o)));
+  const SCRIB = {
+    // agenda: a clipboard with two items ticked
+    checklist(r, s, cx, cy, S) {
+      const w = S * 0.62, h = S * 0.82, x = cx - w / 2, y = cy - h / 2;
+      s.appendChild(r.rectangle(x, y, w, h, ln()));
+      s.appendChild(r.rectangle(cx - w * 0.2, y - S * 0.06, w * 0.4, S * 0.12, ln({ strokeWidth: 2 })));
+      [0, 1, 2].forEach(i => {
+        const ry = y + h * (0.3 + i * 0.24), bx = x + w * 0.14, k = S * 0.1;
+        s.appendChild(r.rectangle(bx, ry - k / 2, k, k, ln({ strokeWidth: 1.8 })));
+        s.appendChild(r.line(bx + k * 1.6, ry, x + w * 0.86, ry, ln({ strokeWidth: 1.8 })));
+        if (i < 2) check(r, s, bx + k * 0.1, ry - k * 0.05, k * 1.1, { stroke: P().yellow, strokeWidth: 2.4 });
+      });
+    },
+    // docs everywhere: a stack of pages with a folded corner
+    docs(r, s, cx, cy, S) {
+      const w = S * 0.5, h = S * 0.66, f = S * 0.14;
+      [2, 1].forEach(k => {                                       // pages behind: only the top and right edges peek out
+        const x = cx - w / 2 + k * S * 0.09, y = cy - h / 2 - k * S * 0.09;
+        s.appendChild(r.linearPath([[x, y + S * 0.09], [x, y], [x + w, y], [x + w, y + h], [x + w - S * 0.09, y + h]], ln({ strokeWidth: 1.8 })));
+      });
+      const x = cx - w / 2, y = cy - h / 2;
+      s.appendChild(r.polygon([[x, y], [x + w - f, y], [x + w, y + f], [x + w, y + h], [x, y + h]], ln()));
+      s.appendChild(r.linearPath([[x + w - f, y], [x + w - f, y + f], [x + w, y + f]], ln({ strokeWidth: 1.8 })));
+      [0.38, 0.54, 0.7].forEach((t, i) => s.appendChild(r.line(x + w * 0.16, y + h * t, x + w * (i === 2 ? 0.6 : 0.84), y + h * t, ln({ strokeWidth: 1.6 }))));
+      check(r, s, x + w * 0.5, y + h * 0.86, S * 0.16, { stroke: P().yellow, strokeWidth: 2.6 });
+    },
+    // anvil: an anvil, a hammer coming down, and a few sparks
+    anvil(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.polygon([[X(-0.62), Y(-0.02)], [X(-0.3), Y(-0.12)], [X(0.42), Y(-0.12)], [X(0.42), Y(0.04)], [X(0.16), Y(0.12)],
+        [X(0.3), Y(0.36)], [X(-0.28), Y(0.36)], [X(-0.12), Y(0.12)], [X(-0.3), Y(0.04)]], ln()));
+      s.appendChild(r.line(X(0.62), Y(-0.78), X(0.18), Y(-0.36), ln({ strokeWidth: 2.6 })));            // handle
+      s.appendChild(r.polygon([[X(0.02), Y(-0.44)], [X(0.16), Y(-0.58)], [X(0.38), Y(-0.36)], [X(0.24), Y(-0.22)]], ln()));  // head
+      [[-0.3, -0.42], [-0.12, -0.5], [-0.38, -0.26], [0.0, -0.62]].forEach(([dx, dy]) =>
+        s.appendChild(r.line(X(0.02), Y(-0.16), X(0.02 + dx * 0.6), Y(-0.16 + dy * 0.6), ln({ stroke: P().yellow, strokeWidth: 2.2, roughness: 0.8 }))));
+    },
+    // test: a lab flask with bubbles
+    flask(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.linearPath([[X(-0.1), Y(-0.42)], [X(-0.1), Y(-0.14)], [X(-0.38), Y(0.38)], [X(0.38), Y(0.38)], [X(0.1), Y(-0.14)], [X(0.1), Y(-0.42)]], ln()));
+      s.appendChild(r.line(X(-0.15), Y(-0.42), X(0.15), Y(-0.42), ln()));
+      s.appendChild(r.curve([[X(-0.24), Y(0.12)], [X(-0.12), Y(0.09)], [X(0), Y(0.13)], [X(0.12), Y(0.09)], [X(0.24), Y(0.12)]], ln({ strokeWidth: 1.8 })));
+      check(r, s, X(-0.08), Y(0.26), S * 0.16, { stroke: P().yellow, strokeWidth: 2.4 });
+      [[0.04, -0.56, 0.1], [-0.07, -0.7, 0.07], [0.1, -0.84, 0.12]].forEach(([dx, dy, d]) => s.appendChild(r.circle(X(dx), Y(dy), S * d, ln({ strokeWidth: 1.6 }))));
+    },
+    // team status: bars going up with an arrow
+    chart(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.linearPath([[X(-0.6), Y(-0.42)], [X(-0.6), Y(0.36)], [X(0.62), Y(0.36)]], ln()));
+      [[-0.46, 0.18], [-0.18, 0.3], [0.1, 0.44], [0.38, 0.58]].forEach(([dx, h]) => s.appendChild(r.rectangle(X(dx), Y(0.36 - h), S * 0.16, S * h, ln({ strokeWidth: 1.8 }))));
+      s.appendChild(r.curve([[X(-0.5), Y(0.02)], [X(-0.15), Y(-0.08)], [X(0.18), Y(-0.24)], [X(0.5), Y(-0.44)]], ln({ stroke: P().yellow, strokeWidth: 2.4 })));
+      s.appendChild(r.linearPath([[X(0.36), Y(-0.44)], [X(0.52), Y(-0.45)], [X(0.47), Y(-0.3)]], ln({ stroke: P().yellow, strokeWidth: 2.4 })));
+    },
+    // review bot: a robot face with a magnifier
+    robot(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.rectangle(X(-0.42), Y(-0.24), S * 0.6, S * 0.48, ln()));
+      s.appendChild(r.line(X(-0.12), Y(-0.24), X(-0.12), Y(-0.4), ln()));
+      s.appendChild(r.circle(X(-0.12), Y(-0.44), S * 0.08, ln({ strokeWidth: 1.8 })));
+      [-0.26, 0.02].forEach(dx => s.appendChild(r.circle(X(dx), Y(-0.06), S * 0.1, ln({ strokeWidth: 1.8 }))));
+      s.appendChild(r.rectangle(X(-0.26), Y(0.08), S * 0.28, S * 0.08, ln({ strokeWidth: 1.6 })));
+      [-0.47, 0.18].forEach(dx => s.appendChild(r.rectangle(X(dx), Y(-0.08), S * 0.05, S * 0.16, ln({ strokeWidth: 1.6 }))));
+      s.appendChild(r.circle(X(0.38), Y(0.2), S * 0.3, ln({ stroke: P().yellow, strokeWidth: 2.4 })));
+      s.appendChild(r.line(X(0.48), Y(0.31), X(0.64), Y(0.48), ln({ stroke: P().yellow, strokeWidth: 3 })));
+    },
+    // cover: a light bulb with rays
+    bulb(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.circle(X(0), Y(-0.12), S * 0.5, ln()));
+      s.appendChild(r.linearPath([[X(-0.12), Y(0.1)], [X(-0.1), Y(0.28)], [X(0.1), Y(0.28)], [X(0.12), Y(0.1)]], ln()));
+      [0.34, 0.4].forEach(y => s.appendChild(r.line(X(-0.09), Y(y), X(0.09), Y(y), ln({ strokeWidth: 1.8 }))));
+      s.appendChild(r.linearPath([[X(-0.06), Y(0.06)], [X(-0.03), Y(-0.12)], [X(0.03), Y(-0.06)], [X(0.06), Y(-0.16)]], ln({ stroke: P().yellow, strokeWidth: 1.8 })));
+      [-2.4, -1.95, -1.57, -1.19, -0.74].forEach(a => s.appendChild(r.line(X(0.36 * Math.cos(a)), Y(-0.12 + 0.36 * Math.sin(a)), X(0.48 * Math.cos(a)), Y(-0.12 + 0.48 * Math.sin(a)), ln({ stroke: P().yellow, strokeWidth: 2 }))));
+    },
+    // cover: code brackets
+    code(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.linearPath([[X(-0.3), Y(-0.24)], [X(-0.56), Y(0)], [X(-0.3), Y(0.24)]], ln({ strokeWidth: 2.6 })));
+      s.appendChild(r.line(X(0.1), Y(-0.3), X(-0.1), Y(0.3), ln({ strokeWidth: 2.6 })));
+      s.appendChild(r.linearPath([[X(0.3), Y(-0.24)], [X(0.56), Y(0)], [X(0.3), Y(0.24)]], ln({ strokeWidth: 2.6 })));
+    },
+  };
+  function scribbles() {
+    document.querySelectorAll('.slide[data-scrib]').forEach(sec => {
+      sec.querySelectorAll(':scope > svg.scrib').forEach(n => n.remove());
+      const h2 = sec.querySelector('h2'), next = h2 && h2.nextElementSibling;
+      if (!next) return;
+      const sb = sec.getBoundingClientRect(), hb = h2.getBoundingClientRect(), nb = next.getBoundingClientRect();
+      const W = sec.offsetWidth, H = sec.offsetHeight;
+      // free corner: right of the title, below the nav buttons, above the first block
+      const x0 = Math.max(hb.right - sb.left + 90, W * 0.5), x1 = W - W * 0.05, y0 = 78, y1 = nb.top - sb.top - 18;
+      const S = Math.min(y1 - y0, 170);
+      if (S < 90 || x1 - x0 < S * 1.6) return;
+      const s = document.createElementNS(NS, 'svg');
+      s.classList.add('scrib', 'rough-crayon');
+      s.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      sec.prepend(s);
+      SCRIB[sec.dataset.scrib](rough.svg(s), s, x1 - S * 0.95, (y0 + y1) / 2, S);
+    });
+  }
+  // clumsy star + loose underline on a takeaway line (.mk underline only, .mk.st also the star)
+  function marks() {
+    document.querySelectorAll('.mk').forEach(el => {
+      el.querySelectorAll(':scope > svg').forEach(n => n.remove());
+      const b = el.getBoundingClientRect();
+      const s = document.createElementNS(NS, 'svg');
+      s.classList.add('rough-crayon');
+      s.setAttribute('style', `width:${b.width}px;height:${b.height}px`);
+      s.setAttribute('viewBox', `0 0 ${b.width} ${b.height}`);
+      el.prepend(s);
+      const r = rough.svg(s), c = P();
+      for (const rc of el.getClientRects()) {
+        const x = rc.left - b.left - 4, y = rc.bottom - b.top + 1, w = rc.width + 8;
+        [[0, 0, 1, 0.8], [Math.PI, 3, 0.93, 1]].forEach(([ph, dy, span, f]) => {
+          const pts = Array.from({ length: 9 }, (_, k) => [x + w * span * k / 8, y + dy + 3.5 * Math.sin(k * f + ph)]);
+          s.appendChild(r.curve(pts, base({ stroke: c.sky, strokeWidth: 2.2, roughness: 0.9, bowing: 0.6 })));
+        });
+      }
+      if (!el.classList.contains('st')) return;
+      const R = b.height * 0.55, cx = -R - 14, cy = b.height / 2;
+      const pts = Array.from({ length: 6 }, (_, k) => {
+        const a = -Math.PI / 2 + k * Math.PI * 0.8, j = k === 5 ? 0.18 : (k % 2 ? 0.1 : -0.08);
+        return [cx + R * (1 + j) * Math.cos(a), cy + R * (1 + j) * Math.sin(a)];
+      });
+      s.appendChild(r.linearPath(pts, base({ stroke: c.sky, strokeWidth: 2.4, roughness: 1.2, bowing: 1.2 })));
+    });
+  }
+
+  function draw() {
+    if (!window.rough) return;
+    seed = 1;
+    const c = P();
+    const labelCols = [c.pink, c.sky, c.yellow, c.green];
+
+    document.querySelectorAll('.slide h2').forEach(underline);
+    document.querySelectorAll('small.k, .q, .lbl').forEach((el, i) => {
+      const col = el.closest('.trk') ? c.sky : labelCols[i % labelCols.length];
+      el.style.color = col;
+      ring(el, col);
+    });
+    document.querySelectorAll('.row').forEach(el => box(el, { stroke: c.ink }));
+    document.querySelectorAll('.row .n').forEach(el => {
+      const { s, w, h, r } = overlay(el);
+      s.appendChild(r.circle(w / 2, h / 2, Math.min(w, h) - 2, base({ stroke: c.yellow, strokeWidth: 2.6 })));
+    });
+    document.querySelectorAll('.boxes > *').forEach(el => {
+      if (el.dataset.pct) return progress(el, +el.dataset.pct / 100);
+      if (el.classList.contains('meta')) return box(el, { stroke: c.dim, strokeWidth: 2, strokeLineDash: [8, 7] });
+      box(el, el.classList.contains('on')
+        ? { stroke: c.yellow, strokeWidth: 3.4, fill: tint.yellow, fillStyle: 'solid' }
+        : { stroke: c.ink });
+    });
+    document.querySelectorAll('.figs > div, .score > div').forEach(el => box(el, { stroke: c.ink }));
+    document.querySelectorAll('.why > div, .qa > div, .ba > div').forEach(el => {
+      const em = el.classList.contains('fx') || el.classList.contains('ans') || el.previousElementSibling;
+      box(el, em ? { stroke: c.pink, strokeWidth: 3.2, fill: tint.pink, fillStyle: 'solid' } : { stroke: c.ink });
+    });
+    document.querySelectorAll('.cat > div').forEach((el, i) => box(el, { stroke: [c.sky, c.green, c.pink][i % 3], strokeWidth: 3 }));
+    document.querySelectorAll('.src span').forEach(el => box(el, { stroke: c.ink, strokeWidth: 2, strokeLineDash: [8, 7] }));
+    document.querySelectorAll('.logline, .alert').forEach(el => box(el, { stroke: c.ink, strokeWidth: 2.2 }));
+    // bars: chalk shading when the bar is empty, a soft rubbed fill when text sits on it
+    const bar = (el, col, soft) => box(el, el.textContent.trim()
+      ? { stroke: col, strokeWidth: 2.6, fill: soft, fillStyle: 'solid' }
+      : { stroke: col, strokeWidth: 2.4, fill: col, fillStyle: 'hachure', hachureGap: 6, fillWeight: 2.2, hachureAngle: -55 });
+    document.querySelectorAll('.bar .seen').forEach(el => bar(el, c.sky, tint.sky));
+    document.querySelectorAll('.bar .blind').forEach(el => bar(el, c.red, tint.red));
+    document.querySelectorAll('.repos i').forEach(el => box(el, { stroke: c.ink, strokeWidth: 1.6, roughness: 1.8 }));
+    document.querySelectorAll('.tblw').forEach(el => box(el, { stroke: c.ink }));
+    diagram();
+    cover();
+    scribbles();
+    marks();
+  }
+
+  let t;
+  const go = () => { clearTimeout(t); t = setTimeout(draw, 120); };
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(draw);
+  addEventListener('resize', go);
+})();
+</script>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  let cur = 0;
+  const go = i => { cur = Math.max(0, Math.min(slides.length - 1, i)); slides[cur].scrollIntoView(); };
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) cur = slides.indexOf(e.target); }), { threshold: 0.55 });
+  slides.forEach(s => io.observe(s));
+  document.getElementById('prev').onclick = () => go(cur - 1);
+  document.getElementById('next').onclick = () => go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+    if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+  });
+</script>
+</body>
+</html>
