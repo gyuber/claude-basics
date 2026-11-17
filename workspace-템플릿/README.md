@@ -7,5 +7,6 @@
 | `CLAUDE.md` | 시작하자/마무리하자 절차와 규칙. Claude가 자동으로 읽음 |
 | `.claude/settings.json` | 기본 권한 모드(Accept edits), 허용·차단 명령 |
 | `.gitignore` | `자료/`, `결과물/`을 GitHub에서 제외 |
+| `.claude/skills/` | 스킬 목록(`목록.md`)과 예시 스킬 |
 
 추가로 빈 파일 `노하우.md`, `피드백.md`와 빈 폴더 `작업일지/`, `재사용/지시문/`, `.claude/skills/`, `자료/`, `결과물/`을 만든다.
