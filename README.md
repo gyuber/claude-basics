@@ -38,6 +38,7 @@ flowchart LR
 
 [템플릿](작업방식/템플릿/): 작업 폴더 세팅용 파일
 
+> 강의마다 **🙋 나 / 🤖 Claude** 대화 예시와 결과물 예시가 있어요. 예시의 회사, 이름, 숫자는 모두 가상이에요.
 > 앱 메뉴 이름은 버전에 따라 조금 다를 수 있어요.
 
 📖 공식 문서: [데스크톱 앱의 Claude Code](https://code.claude.com/docs/en/desktop) · [권한 모드](https://code.claude.com/docs/en/permission-modes) · [메모리(CLAUDE.md)](https://code.claude.com/docs/en/memory) · [스킬](https://code.claude.com/docs/en/skills)
