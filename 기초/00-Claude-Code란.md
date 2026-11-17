@@ -57,6 +57,7 @@ flowchart LR
 └── 결과물/
     └── 월별합계.xlsx    ← 새로 생김
 ```
-> 💬 예시 대화는 이해를 돕기 위해 만든 것이에요. 실제 Claude의 답은 문장이 조금 다를 수 있어요.
+
+*💬 예시 대화는 이해를 돕기 위해 만든 것이에요. 실제 Claude의 답은 문장이 조금 다를 수 있어요.*
 
 📖 공식: [데스크톱 앱의 Claude Code](https://code.claude.com/docs/en/desktop)
