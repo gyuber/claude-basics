@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude Code 칠판 강의</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gamja+Flower&family=Gaegu:wght@400;700&family=Gowun+Dodum&family=Nanum+Pen+Script&display=swap" rel="stylesheet">
+<style>
+  /* Chalkboard: dark slate with eraser smudges and a chalk ledge, chalk strokes via rough.js + grain filters */
+  :root {
+    --board: #2B2E32; --board-hi: #383C41; --board-lo: #1B1D20;
+    --ink: #F3F1E7; --ink-2: #D6D8D4; --ink-3: #9A9E9C;
+    --blue: #8ED1FC; --pink: #FF9EC4; --orange: #FFC078; --purple: #D0BFFF;
+    --green: #B2F2BB; --red: #FF8A8A; --yellow: #FFE380;
+    --hand: "Gamja Flower", "Gowun Dodum", cursive;
+    --title: "Nanum Pen Script", "Gamja Flower", cursive;
+    --font: "Gaegu", "Gowun Dodum", sans-serif;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-snap-type: y mandatory; }
+  body { background: var(--board-lo); color: var(--ink); font-family: var(--font); font-size: 27px; line-height: 1.6; word-break: keep-all; text-shadow: 0 0 1px rgba(243, 241, 231, .35); }
+
+  .slide {
+    min-height: 100vh; scroll-snap-align: start; position: relative; padding: 68px 7vw 100px; display: flex; flex-direction: column; justify-content: center;
+    background:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.1 -.5'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1600' height='1000' preserveAspectRatio='none'%3E%3Cfilter id='s' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.0018 .0065' numOctaves='3' seed='8'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.5 -.62'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)' opacity='.1'/%3E%3C/svg%3E") 0 0 / 100% 100%,
+      radial-gradient(ellipse 55% 40% at 28% 32%, rgba(255, 255, 255, .04), transparent 70%),
+      radial-gradient(ellipse 120% 100% at 50% 45%, var(--board-hi) 0%, var(--board) 55%, var(--board-lo) 100%);
+  }
+  .pg { position: absolute; left: 7vw; right: 7vw; bottom: 42px; display: flex; justify-content: space-between; font-family: var(--hand); font-size: 23px; color: var(--ink-3); }
+
+  /* chalk ledge along the bottom, fixed over every slide (no frame) */
+  .ledge { position: fixed; left: 0; right: 0; bottom: 0; height: 22px; z-index: 6; pointer-events: none;
+    background: linear-gradient(#B07A4A 0 3px, #94653C 3px 60%, #7A512F); box-shadow: 0 -6px 14px rgba(0, 0, 0, .45); }
+  .ledge i { position: absolute; bottom: 22px; height: 11px; border-radius: 6px; box-shadow: 0 2px 2px rgba(0, 0, 0, .35); }
+  .ledge .c1 { left: 3%; width: 22px; background: linear-gradient(#FFFFFF, #D9D9D4); }
+  .ledge .c2 { left: 8%; width: 150px; background: linear-gradient(#D6F5DA, #A8D8AE); }
+  .ledge .c3 { left: 21%; width: 160px; background: linear-gradient(#BFE3FF, #84BDEB); transform: rotate(-3deg); bottom: 25px; }
+  .ledge .c4 { left: 35%; width: 150px; background: linear-gradient(#FFF6C8, #E9DB98); }
+  .ledge .er { left: 56%; width: 170px; height: 40px; border-radius: 4px 4px 2px 2px;
+    background: linear-gradient(#F2E6B8 0 72%, #B9362F 72%); box-shadow: inset 0 -2px 0 rgba(0, 0, 0, .2), 0 3px 4px rgba(0, 0, 0, .4); }
+  .ledge .c5 { left: 72%; width: 150px; background: linear-gradient(#FFFFFF, #D9D9D4); }
+
+  h1, h2, h3, .row .n, .figs .v, .score .v, .cat .cn, .q, .lbl, small.k, .hand, .legend, .key { font-family: var(--hand); }
+  h1, h2 { font-family: var(--title); }
+  h1 { font-weight: 400; font-size: clamp(110px, 15.5vw, 240px); line-height: .9; }
+  h2 { font-weight: 400; font-size: clamp(56px, 6.6vw, 92px); line-height: 1.05; margin-bottom: 32px; align-self: flex-start; }
+  h3 { font-weight: 700; font-size: 34px; line-height: 1.25; }
+  small.k, .q, .lbl { display: inline-block; align-self: flex-start; font-size: 30px; font-weight: 700; color: var(--ink); padding: 4px 22px; margin-bottom: 14px; position: relative; z-index: 0; }
+  .hl { position: relative; z-index: 0; }
+
+  /* chalk grain on titles and big numbers */
+  h1, .slide h2, .figs .v, .cat .cn, .trk .pct, .row .n { filter: url(#chalk-text); }
+
+  /* every sketched element: transparent, rough.js draws the chalk outline behind it */
+  .sk { position: relative; z-index: 0; }
+  .sk > svg.rough, .rough-crayon { filter: url(#chalk); }
+  .sk > svg.rough { position: absolute; inset: -6px; width: calc(100% + 12px); height: calc(100% + 12px); z-index: -1; pointer-events: none; overflow: visible; }
+  .hl-svg { position: absolute; z-index: -1; pointer-events: none; overflow: visible; }
+
+  .rows { display: grid; gap: 18px; }
+  .row { display: grid; grid-template-columns: 76px 1fr auto; gap: 20px; align-items: center; padding: 18px 28px; }
+  .row .n { width: 56px; height: 56px; display: grid; place-items: center; font-size: 36px; font-weight: 700; color: var(--yellow); }
+  .row h3 { font-size: clamp(30px, 3.2vw, 44px); }
+  .row .r { color: var(--ink-2); font-size: 22px; }
+
+  .boxes { display: grid; gap: 18px; }
+  .boxes > * { padding: 22px; display: block; }
+  .b3 { grid-template-columns: repeat(3, 1fr); }
+  .b2 { grid-template-columns: repeat(2, 1fr); }
+  .b5 { grid-template-columns: repeat(5, 1fr); }
+  .boxes p { color: var(--ink-2); margin-top: 4px; font-size: 21px; }
+
+  .figs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-top: 18px; }
+  .figs > div { padding: 18px 24px; }
+  .figs .v { font-size: 56px; font-weight: 700; line-height: 1; }
+  .figs > div:first-child .v { color: var(--yellow); }
+  .figs .k2 { font-size: 20px; color: var(--ink-2); }
+
+  .why { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .why > div { padding: 28px 30px; }
+  .q, .lbl { font-size: 34px; }
+  .why ul { list-style: none; }
+  .why li { padding: 9px 0 9px 30px; position: relative; font-size: 23px; }
+  .why li::before { content: "✓"; font-family: var(--hand); font-weight: 700; position: absolute; left: 2px; top: 6px; color: var(--ink-3); font-size: 26px; }
+  .why .fx li::before { color: var(--pink); }
+  .why li b, .res b, .logline b { font-weight: 700; color: var(--yellow); }
+
+  .qa { display: grid; grid-template-columns: 1fr 1.4fr; gap: 22px; }
+  .qa > div { padding: 28px; }
+  .qa h3 { font-size: clamp(28px, 2.8vw, 38px); margin: 2px 0 10px; }
+  .qa p { font-size: 22px; color: var(--ink-2); }
+  .qa .ev { margin-top: 14px; padding-top: 12px; border-top: 2px dashed var(--ink-3); font-size: 20px; color: var(--ink-2); }
+  .qa .ev code { font-family: var(--font); font-weight: 700; font-size: 22px; color: var(--ink); }
+  .score { display: grid; grid-template-columns: auto auto auto 1fr; gap: 18px; margin-top: 18px; align-items: stretch; }
+  .score > div { padding: 14px 22px; }
+  .score > div:last-child { color: var(--ink-2); font-size: 20px; display: flex; align-items: center; }
+  .score .v { font-size: 46px; font-weight: 700; line-height: 1; }
+  .score > div:first-child .v { color: var(--green); }
+  .score .k2 { font-size: 20px; color: var(--ink-2); }
+
+  .cat { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+  .cat > div { padding: 24px 26px; }
+  .cat .cn { font-size: 56px; font-weight: 700; line-height: 1; color: var(--blue); }
+  .cat > div:nth-child(2) .cn { color: var(--green); }
+  .cat > div:nth-child(3) .cn { color: var(--pink); }
+  .cat h3 { margin: 6px 0 0; font-size: 36px; }
+  .cat .use { color: var(--ink-2); font-size: 20px; margin-bottom: 10px; }
+  .cat ul { list-style: none; }
+  .cat li { padding: 7px 0; border-top: 1.5px dashed rgba(243, 241, 231, .35); font-size: 21px; display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+
+  .ba { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+  .ba > div { padding: 26px 28px; }
+  .ba .res { margin-top: 16px; padding-top: 12px; border-top: 2px dashed rgba(243, 241, 231, .35); font-size: 22px; }
+  .src { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .src span { padding: 12px; font-size: 21px; text-align: center; color: var(--ink-2); }
+  .hand { text-align: center; font-size: 29px; font-weight: 700; margin-top: 12px; color: var(--red); }
+  .hand::before { content: "↓ 손으로 대조 ↓"; display: block; }
+  .logline { font-family: var(--font); font-weight: 700; font-size: 24px; line-height: 1.9; padding: 16px; overflow-wrap: anywhere; color: var(--ink-2); }
+  .sub2 { margin-top: 18px; font-size: 21px; color: var(--ink-2); }
+
+  .bar { display: flex; height: 62px; margin: 10px 0 4px; }
+  .bar i { display: flex; align-items: center; justify-content: center; font-style: normal; font-family: var(--hand); font-weight: 700; font-size: 28px; position: relative; z-index: 0; }
+  .bar .seen { color: var(--ink); }
+  .bar .blind { color: var(--red); }
+  .legend { display: flex; justify-content: space-between; font-size: 23px; color: var(--ink-2); }
+
+  .repos { display: grid; grid-template-columns: repeat(11, 1fr); gap: 8px; margin: 4px 0 10px; }
+  .repos i { aspect-ratio: 1; display: block; }
+  .key { display: flex; gap: 18px; font-size: 23px; color: var(--ink-2); flex-wrap: wrap; }
+  .alert { padding: 18px 20px; font-size: 26px; font-family: var(--hand); font-weight: 700; }
+  .alert code { display: block; font-family: var(--font); font-size: 24px; font-weight: 400; margin-top: 6px; color: var(--blue); }
+
+  .ref { font-size: .82em; color: var(--ink-3); white-space: nowrap; margin-left: 2px; }
+  .note { margin-top: 20px; font-size: 21px; color: var(--ink-2); }
+
+  /* diagram: originals hidden, rough chalk copies drawn by script */
+  .diagram svg { width: 100%; height: auto; display: block; max-width: 1200px; overflow: visible; }
+  .diagram .s-box, .diagram .s-inv, .diagram .s-l { visibility: hidden; }
+  .s-t { font-family: var(--hand); font-weight: 700; font-size: 30px; fill: var(--ink); }
+  .s-t.i { fill: var(--yellow); }
+  .s-s.i { fill: var(--ink); }
+  .s-s { font-family: var(--font); font-size: 21px; fill: var(--ink-2); }
+  .s-lab { font-family: var(--hand); font-weight: 700; font-size: 27px; fill: var(--blue); }
+  .s-ah { display: none; }
+
+  /* cover */
+  .cover { align-items: flex-start; overflow: hidden; }
+  .cover h1 { position: relative; z-index: 1; line-height: .85; }
+  .cover h1 span { color: var(--pink); }
+  .cover svg.doodle { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+  /* faint doodles in a slide's empty corner, and a clumsy star + underline on a takeaway line */
+  .slide { isolation: isolate; }
+  svg.scrib { position: absolute; inset: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: .3; }
+  .mk { position: relative; z-index: 0; white-space: nowrap; }
+  .mk > svg { position: absolute; left: 0; top: 0; z-index: -1; pointer-events: none; overflow: visible; }
+
+  .nav { position: fixed; right: calc(7vw - 8px); top: 22px; display: flex; gap: 10px; z-index: 8; }
+  .nav button { font: 700 22px var(--hand); background: transparent; color: var(--ink-3); border: 0; padding: 6px 12px; cursor: pointer; }
+  .nav button:hover { color: var(--yellow); }
+
+  @media (max-width: 800px) {
+    .slide { padding: 72px 18px 92px; }
+    .pg { left: 18px; right: 18px; bottom: 32px; }
+    .nav { right: 14px; top: 12px; }
+    .ledge { height: 12px; }
+    .ledge i { display: none; }
+    .b3, .b2, .b5, .why, .qa, .cat, .ba, .figs, .score { grid-template-columns: 1fr; }
+    .row { grid-template-columns: 56px 1fr; padding: 16px; }
+    .row .r { grid-column: 2; }
+  }
+
+  /* deck extras: paired bars, table, quote line */
+  .tt { font-family: var(--title); font-size: 44px; color: var(--ink-2); margin: -16px 0 22px; }
+  .boxes p.ref { display: block; margin: 8px 0 0; color: var(--ink-3); font-size: 18px; }
+  .cmp + .legend { margin-top: 22px; }
+  .cmp.rate { grid-template-columns: 170px 1fr; }
+  .cmp .t small { display: block; font-family: var(--font); font-weight: 400; font-size: 18px; color: var(--ink-3); line-height: 1.2; }
+  .trk > div { padding: 18px 20px; display: flex; flex-direction: column; }
+  .trk .pct { position: absolute; right: 18px; top: 16px; font-family: var(--hand); font-weight: 700; font-size: 34px; line-height: 1; color: var(--blue); }
+  .trk .gauge { display: block; height: 18px; margin-top: auto; }
+  .trk p { margin-bottom: 10px; font-size: 19px; }
+  .trk .meta p, .trk .meta h3 { color: var(--ink-3); }
+  .trk h3 { font-size: 30px; }
+  .ba h3 { font-size: 32px; margin: 4px 0 14px; }
+  .ba .key { margin-top: 4px; }
+  .b2 h3 { font-size: 30px; overflow-wrap: anywhere; }
+  .cmp { display: grid; grid-template-columns: 110px 1fr; gap: 14px 24px; align-items: center; }
+  .cmp .t { font-family: var(--hand); font-size: 34px; font-weight: 700; }
+  .cmp .pair { display: grid; gap: 6px; }
+  .cmp .bar { height: 36px; margin: 0; align-items: center; }
+  .cmp .bar i { height: 100%; }
+  .cmp .bar b { font-family: var(--hand); font-size: 27px; margin-left: 12px; }
+  .tblw { padding: 10px 18px; align-self: stretch; }
+  .tbl { width: 100%; border-collapse: collapse; font-size: 25px; }
+  .tbl th, .tbl td { padding: 9px 14px; text-align: center; border-bottom: 1.5px dashed rgba(243, 241, 231, .3); }
+  .tbl tbody tr:last-child th, .tbl tbody tr:last-child td { border-bottom: 0; }
+  .tbl th { font-family: var(--hand); font-weight: 700; font-size: 28px; }
+  .tbl thead th { color: var(--yellow); }
+  .tbl tbody th { text-align: left; white-space: nowrap; color: var(--ink-2); }
+</style>
+</head>
+<body>
+
+<div class="ledge" aria-hidden="true"><i class="c1"></i><i class="c2"></i><i class="c3"></i><i class="c4"></i><i class="er"></i><i class="c5"></i></div>
+<div class="nav"><button id="prev">Prev</button><button id="next">Next</button></div>
+
+<section class="slide cover">
+  <h1>Claude Code<br><span>기초 강의</span></h1>
+</section>
+
+<section class="slide" data-scrib="checklist">
+  <h2>이번 이야기</h2>
+  <div class="rows">
+    <div class="row"><span class="n">1</span><h3>Claude Code 란</h3><span class="r">폴더째로 일 맡기기</span></div>
+    <div class="row"><span class="n">2</span><h3>화면과 일 시키기</h3><span class="r">허락 요청, 좋은 지시</span></div>
+    <div class="row"><span class="n">3</span><h3>작업 순환</h3><span class="r">시작하자, 마무리하자</span></div>
+    <div class="row"><span class="n">4</span><h3>CLAUDE.md 와 스킬</h3><span class="r">쓸수록 똑똑해지게</span></div>
+    <div class="row"><span class="n">5</span><h3>피드백과 약속</h3><span class="r">GitHub 로 주고받기</span></div>
+  </div>
+  <div class="pg"><span>Overview</span><span>02</span></div>
+</section>
+
+<!-- 1. Claude Code -->
+<section class="slide" data-scrib="docs" id="s1">
+  <h2>1. Claude Code 란</h2>
+  <div class="why">
+    <div>
+      <div class="q">일반 대화는</div>
+      <ul>
+        <li>파일을 <b>하나씩</b> 첨부</li>
+        <li>매번 <b>같은 설명</b>을 다시</li>
+        <li>대화가 끝나면 <b>잊어버림</b></li>
+      </ul>
+    </div>
+    <div class="fx">
+      <div class="q">Code 탭은</div>
+      <ul>
+        <li>폴더째로 <b>읽고 저장</b></li>
+        <li>CLAUDE.md 를 <b>알아서</b> 읽음</li>
+        <li>노하우와 스킬이 <b>폴더에 쌓임</b></li>
+      </ul>
+    </div>
+  </div>
+  <p class="note">Claude 데스크톱 앱의 Code 탭, 코딩은 몰라도 돼요. 평소 말로 시키면 됩니다.</p>
+  <div class="pg"><span>Why / Effect</span><span>03</span></div>
+</section>
+
+<section class="slide">
+  <h2>결과물이 어디로 가나</h2>
+  <div class="ba">
+    <div>
+      <div class="lbl">일반 대화</div>
+      <div class="src">
+        <span>질문</span><span>답변 (글)</span>
+      </div>
+      <div class="res">결과는 <b>복사해서</b> 따로 문서에 붙여넣기</div>
+    </div>
+    <div>
+      <div class="lbl">Code 탭</div>
+      <div class="src">
+        <span>일 맡기기</span><span>Word, 엑셀 저장</span>
+      </div>
+      <div class="res">결과가 <b>결과물 폴더</b>에 파일로 바로 생김</div>
+    </div>
+  </div>
+  <div class="pg"><span>Claude Code</span><span>04</span></div>
+</section>
+
+<section class="slide">
+  <h2>준비는 동생이</h2>
+  <div class="boxes b5">
+    <div><small class="k">Step 1</small><h3>Claude 앱</h3><p>누나 계정으로 로그인</p></div>
+    <div><small class="k">Step 2</small><h3>Git</h3><p>Code 탭에 필요</p></div>
+    <div><small class="k">Step 3</small><h3>gh 로그인</h3><p>누나 GitHub 계정</p></div>
+    <div class="on"><small class="k">Step 4</small><h3>작업 폴더</h3><p>문서\workspace 로 받기</p></div>
+    <div class="on"><small class="k">Step 5</small><h3>폴더 선택</h3><p>Code 탭에서 workspace</p></div>
+  </div>
+  <div class="figs">
+    <div><div class="v">한 번</div><div class="k2">처음에만 세팅</div></div>
+    <div><div class="v">Local</div><div class="k2">환경은 항상 이것</div></div>
+    <div><div class="v">workspace</div><div class="k2">폴더도 항상 이것</div></div>
+    <div><div class="v">0</div><div class="k2">누나가 칠 명령어</div></div>
+  </div>
+  <div class="pg"><span>Claude Code</span><span>05</span></div>
+</section>
+
+<section class="slide">
+  <h2>작업 폴더</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1200 470" role="img" aria-label="노하우, 피드백, 작업일지, 지시문, 스킬은 GitHub 로 올라가 동생이 보고, 자료와 결과물은 PC 에만 남는 구조">
+      <rect rx="18" class="s-inv" x="10" y="30" width="400" height="210"/>
+      <text class="s-t i" x="210" y="85" text-anchor="middle">GitHub 로 올라가는 것</text>
+      <text class="s-s i" x="210" y="135" text-anchor="middle">노하우.md, 피드백.md</text>
+      <text class="s-s i" x="210" y="170" text-anchor="middle">작업일지, 재사용 지시문</text>
+      <text class="s-s i" x="210" y="205" text-anchor="middle">스킬, CLAUDE.md</text>
+
+      <rect rx="18" class="s-box" x="10" y="300" width="400" height="140"/>
+      <text class="s-t" x="210" y="355" text-anchor="middle">자료, 결과물</text>
+      <text class="s-s" x="210" y="395" text-anchor="middle">PC 에만, 절대 안 올라감</text>
+
+      <path class="s-l" d="M410 135 H 560"/>
+      <text class="s-lab" x="485" y="115" text-anchor="middle">push, pull</text>
+
+      <rect rx="18" class="s-box" x="570" y="70" width="260" height="130"/>
+      <text class="s-t" x="700" y="122" text-anchor="middle">GitHub</text>
+      <text class="s-s" x="700" y="160" text-anchor="middle">비공개 저장소</text>
+
+      <path class="s-l" d="M830 135 H 920"/>
+
+      <rect rx="18" class="s-box" x="930" y="70" width="260" height="130"/>
+      <text class="s-t" x="1060" y="122" text-anchor="middle">동생</text>
+      <text class="s-s" x="1060" y="160" text-anchor="middle">일지 보고 피드백</text>
+
+      <path class="s-l d n" d="M410 370 H 640"/>
+      <text class="s-lab" x="660" y="380">막힘 (.gitignore)</text>
+    </svg>
+  </div>
+  <p class="note">의뢰인 파일은 자료, 결과물 폴더에만. 동생은 일하는 방식만 봐요.</p>
+  <div class="pg"><span>Claude Code</span><span>06</span></div>
+</section>
+
+<!-- 2. screen + asking -->
+<section class="slide" data-scrib="robot" id="s2">
+  <h2>2. 입력창 아래 한 줄</h2>
+  <div class="boxes b2">
+    <div><small class="k">① 환경</small><h3>Local</h3><p>Claude 가 일하는 곳, 항상 그대로</p></div>
+    <div><small class="k">② 폴더</small><h3>workspace</h3><p>작업 폴더, 항상 그대로</p></div>
+    <div class="on"><small class="k">③ 권한 모드</small><h3>Accept edits</h3><p>얼마나 자주 허락을 묻는지, 다음 장</p></div>
+    <div><small class="k">④ 모델</small><h3>건드리지 않기</h3><p>어떤 Claude 를 쓰는지</p></div>
+  </div>
+  <p class="note">코드처럼 생긴 회색 글자, +12 -1 같은 숫자는 무시해도 돼요.</p>
+  <div class="pg"><span>Screen</span><span>07</span></div>
+</section>
+
+<section class="slide">
+  <h2>권한 모드</h2>
+  <div class="tblw">
+    <table class="tbl">
+      <thead><tr><th>모드</th><th>뜻</th><th>언제</th></tr></thead>
+      <tbody>
+        <tr><th>Manual</th><td>고칠 때마다 허락을 물음</td><td>처음 익힐 때</td></tr>
+        <tr><th>Accept edits</th><td>파일 수정은 알아서, 명령만 물음</td><td>평소</td></tr>
+        <tr><th>Plan</th><td>계획만 세우고 아무것도 안 바꿈</td><td>큰 작업 전에</td></tr>
+        <tr><th>Auto, Bypass</th><td>거의 묻지 않음</td><td>쓰지 않기</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">모드 이름은 앱 버전에 따라 조금 다를 수 있어요.</p>
+  <div class="pg"><span>Screen</span><span>08</span></div>
+</section>
+
+<section class="slide">
+  <h2>허락 요청이 뜨면</h2>
+  <div class="ba">
+    <div>
+      <div class="lbl">이해되면</div>
+      <h3>내가 시킨 일과 맞나?</h3>
+      <div class="src"><span>저장, 파일 만들기</span><span>올리기, 받기</span></div>
+      <div class="res">맞으면 <b>허락</b></div>
+    </div>
+    <div>
+      <div class="lbl">모르겠으면</div>
+      <h3>삭제, 전송 같은 낯선 것</h3>
+      <div class="src"><span style="grid-column:1/-1">"이게 뭐 하는 거야?"</span></div>
+      <div class="res"><b>거절</b>하고 물어보기</div>
+    </div>
+  </div>
+  <p class="note"><span class="mk st">거절해서 망가지는 건 없어요</span></p>
+  <div class="pg"><span>Screen</span><span>09</span></div>
+</section>
+
+<section class="slide">
+  <h2>좋은 지시의 네 가지</h2>
+  <div class="boxes b2">
+    <div><small class="k">입장</small><h3>누구 편인가</h3><p>"우리는 매수인 측이야"</p></div>
+    <div><small class="k">목표</small><h3>무엇을 얻고 싶나</h3><p>"불리한 조항을 찾고 싶어"</p></div>
+    <div><small class="k">자료</small><h3>어떤 파일을 보나</h3><p>"@자료/계약서.docx 봐줘", @ 치면 목록이 떠요</p></div>
+    <div><small class="k">형식</small><h3>어떻게 받을까</h3><p>"표로, 결과물 폴더에 Word 로 저장"</p></div>
+  </div>
+  <div class="pg"><span>Asking</span><span>10</span></div>
+</section>
+
+<section class="slide">
+  <h2>나쁜 예, 좋은 예</h2>
+  <div class="ba">
+    <div>
+      <div class="lbl">나쁜 예</div>
+      <h3>"이 계약서 검토해줘"</h3>
+      <div class="res">무엇을 봐야 할지 <b>모름</b></div>
+    </div>
+    <div>
+      <div class="lbl">좋은 예</div>
+      <h3>"우리는 매수인 측이야. @자료/계약서.docx 에서 매수인에게 불리한 조항을 찾아서 조항 번호, 문제점, 수정 문구를 표로 정리하고 결과물 폴더에 Word 로 저장해줘."</h3>
+      <div class="res">입장, 목표, 자료, 형식이 <b>다 있음</b></div>
+    </div>
+  </div>
+  <div class="pg"><span>Asking</span><span>11</span></div>
+</section>
+
+<section class="slide">
+  <h2>자주 쓰는 말 여섯</h2>
+  <p class="tt">"이게 명령어예요"</p>
+  <div class="boxes b3">
+    <div><small class="k">1</small><h3>"A4 한 장으로"</h3><p>줄이기</p></div>
+    <div><small class="k">2</small><h3>"쉬운 말로"</h3><p>의뢰인이 읽을 수 있게</p></div>
+    <div><small class="k">3</small><h3>"표로 정리해줘"</h3><p>한눈에 보기</p></div>
+    <div><small class="k">4</small><h3>"3번만 다시"</h3><p>나머지는 그대로</p></div>
+    <div><small class="k">5</small><h3>"반대편에서 반박해봐"</h3><p>검토</p></div>
+    <div><small class="k">6</small><h3>"원래대로 돌려줘"</h3><p>되돌리기</p></div>
+  </div>
+  <p class="note">처음부터 다시 묻지 말고, 같은 작업 안에서 이어서 고쳐 달라고 하기</p>
+  <div class="pg"><span>Asking</span><span>12</span></div>
+</section>
+
+<!-- 3. cycle -->
+<section class="slide" data-scrib="anvil" id="s3">
+  <h2>3. 작업 순환</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1200 470" role="img" aria-label="시작하자, 작업, 마무리하자, 동생 피드백 순서로 돌고, 피드백이 다음 시작하자로 이어지는 순환">
+      <rect rx="18" class="s-inv" x="10" y="110" width="260" height="150"/>
+      <text class="s-t i" x="140" y="170" text-anchor="middle">"시작하자"</text>
+      <text class="s-s i" x="140" y="210" text-anchor="middle">받기, 노하우 읽기</text>
+      <path class="s-l" d="M270 185 H 320"/>
+
+      <rect rx="18" class="s-box" x="330" y="110" width="250" height="150"/>
+      <text class="s-t" x="455" y="170" text-anchor="middle">작업</text>
+      <text class="s-s" x="455" y="210" text-anchor="middle">평소처럼 시키기</text>
+      <path class="s-l" d="M580 185 H 630"/>
+
+      <rect rx="18" class="s-inv" x="640" y="110" width="270" height="150"/>
+      <text class="s-t i" x="775" y="170" text-anchor="middle">"마무리하자"</text>
+      <text class="s-s i" x="775" y="210" text-anchor="middle">일지, 노하우 저장, 올리기</text>
+      <path class="s-l" d="M910 185 H 960"/>
+
+      <rect rx="18" class="s-box" x="970" y="110" width="220" height="150"/>
+      <text class="s-t" x="1080" y="170" text-anchor="middle">동생</text>
+      <text class="s-s" x="1080" y="210" text-anchor="middle">피드백.md</text>
+
+      <path class="s-l d" d="M1080 260 V 380 H 140 V 270"/>
+      <text class="s-lab" x="610" y="425" text-anchor="middle">다음 작업에 반영</text>
+    </svg>
+  </div>
+  <p class="note">누나가 할 말은 두 개뿐, 나머지는 CLAUDE.md 에 적혀 있어서 Claude 가 알아서</p>
+  <div class="pg"><span>Cycle</span><span>13</span></div>
+</section>
+
+<section class="slide">
+  <h2>"마무리하자" 하면</h2>
+  <div class="boxes b2">
+    <div><small class="k">작업일지/</small><h3>작업일지</h3><p>어떻게 시켰고 무엇이 아쉬웠나, 동생이 보고 피드백</p></div>
+    <div><small class="k">노하우.md</small><h3>새로 안 요령</h3><p>한 줄씩, 다음 "시작하자" 때 자동 반영</p></div>
+    <div><small class="k">재사용/지시문/</small><h3>잘된 지시문</h3><p>비슷한 일에 빈칸만 바꿔 다시 쓰기</p></div>
+    <div class="on"><small class="k">GitHub</small><h3>올리기</h3><p>자료, 결과물은 빼고 올라감</p></div>
+  </div>
+  <div class="pg"><span>Cycle</span><span>14</span></div>
+</section>
+
+<section class="slide">
+  <h2>쌓이는 단계</h2>
+  <div class="cmp">
+    <div class="t">한 번</div>
+    <div class="pair"><div class="bar"><i class="seen" style="width:22%">잘 됨</i></div></div>
+    <div class="t">노하우</div>
+    <div class="pair"><div class="bar"><i class="seen" style="width:45%">한 줄 요령</i></div></div>
+    <div class="t">지시문</div>
+    <div class="pair"><div class="bar"><i class="seen" style="width:70%">통째로 다시 쓰기</i></div></div>
+    <div class="t">스킬</div>
+    <div class="pair"><div class="bar"><i class="seen" style="width:100%">말 안 해도 알아서</i></div></div>
+  </div>
+  <div class="legend"><span>막대는 다시 쓰기 쉬운 정도</span><span class="mk st">같은 지시문 세 번이면 스킬로</span></div>
+  <div class="pg"><span>Cycle</span><span>15</span></div>
+</section>
+
+<!-- 4. CLAUDE.md + skills -->
+<section class="slide" data-scrib="flask" id="s4">
+  <h2>4. CLAUDE.md 와 스킬</h2>
+  <div class="cat">
+    <div>
+      <div class="cn">규칙</div>
+      <h3>CLAUDE.md</h3>
+      <div class="use">출근하면 먼저 읽는 업무 매뉴얼</div>
+      <ul>
+        <li>매번 자동으로 읽음</li>
+        <li>거의 안 바뀜</li>
+        <li>동생이 관리</li>
+      </ul>
+    </div>
+    <div>
+      <div class="cn">요령</div>
+      <h3>노하우.md</h3>
+      <div class="use">작업할수록 늘어나는 메모</div>
+      <ul>
+        <li>시작할 때 읽음</li>
+        <li>한 줄씩 늘어남</li>
+        <li>Claude 가 관리</li>
+      </ul>
+    </div>
+    <div>
+      <div class="cn">방법</div>
+      <h3>스킬</h3>
+      <div class="use">그 일을 할 때만 꺼내는 매뉴얼</div>
+      <ul>
+        <li>필요할 때만 읽음</li>
+        <li>작업마다 하나</li>
+        <li>목록.md 로 관리</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pg"><span>CLAUDE.md</span><span>16</span></div>
+</section>
+
+<section class="slide">
+  <h2>스킬의 일생</h2>
+  <div class="boxes b5">
+    <div><small class="k">Step 1</small><h3>탄생</h3><p>"방금 한 방식을 스킬로 만들어줘"</p></div>
+    <div><small class="k">Step 2</small><h3>시험중</h3><p>몇 번 써 보기</p></div>
+    <div><small class="k">Step 3</small><h3>피드백</h3><p>동생, 누나 의견</p></div>
+    <div><small class="k">Step 4</small><h3>수정</h3><p>"스킬에 이거 추가해줘"</p></div>
+    <div class="on"><small class="k">Step 5</small><h3>안정</h3><p>말 안 해도 알아서</p></div>
+  </div>
+  <div class="tblw" style="margin-top:22px">
+    <table class="tbl">
+      <thead><tr><th>스킬</th><th>용도</th><th>상태</th><th>최근 수정</th></tr></thead>
+      <tbody>
+        <tr><th>내용증명</th><td>내용증명 초안</td><td>안정</td><td>11-20</td></tr>
+        <tr><th>판결문-요약</th><td>한 장 요약</td><td>시험중</td><td>11-22</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">.claude/skills/목록.md 예시, Claude 가 알아서 표를 고쳐요</p>
+  <div class="pg"><span>Skills</span><span>17</span></div>
+</section>
+
+<!-- 5. feedback + rules -->
+<section class="slide" data-scrib="chart" id="s5">
+  <h2>5. 피드백 주고받기</h2>
+  <div class="boxes b5">
+    <div><small class="k">누나</small><h3>"마무리하자"</h3><p>일지가 GitHub 로</p></div>
+    <div><small class="k">동생</small><h3>일지 읽기</h3><p>GitHub 에서</p></div>
+    <div><small class="k">동생</small><h3>피드백.md</h3><p>[스킬: 이름] 을 붙이면 그 스킬만</p></div>
+    <div class="on"><small class="k">누나</small><h3>"시작하자"</h3><p>피드백 받아오기</p></div>
+    <div class="on"><small class="k">Claude</small><h3>반영</h3><p>노하우, 스킬 고치기</p></div>
+  </div>
+  <div class="alert">피드백.md 예시<code>## [스킬: 내용증명] 2026-11-21 &nbsp;- 기한은 "도달일로부터 7일 이내"처럼 구체적으로 &nbsp;상태: 미반영</code></div>
+  <div class="pg"><span>Feedback</span><span>18</span></div>
+</section>
+
+<section class="slide">
+  <h2>꼭 지킬 여섯</h2>
+  <div class="boxes b3">
+    <div><small class="k">1</small><h3>원문으로 확인</h3><p>판례 번호, 조문, 숫자는 그럴듯하게 틀릴 수 있음</p></div>
+    <div><small class="k">2</small><h3>사본만 넣기</h3><p>원본은 자료 폴더에 넣지 않기</p></div>
+    <div><small class="k">3</small><h3>개인정보 지우기</h3><p>실명은 A, B 로, 주민번호, 연락처는 삭제</p></div>
+    <div><small class="k">4</small><h3>일지엔 방식만</h3><p>사건 내용은 적지 않기, 동생도 봐요</p></div>
+    <div><small class="k">5</small><h3>모르면 거절</h3><p>Auto, Bypass 모드는 쓰지 않기</p></div>
+    <div class="on"><small class="k">6</small><h3>판단은 내가</h3><p>Claude 는 초안까지</p></div>
+  </div>
+  <p class="note"><span class="mk st">Claude 는 초안까지, 책임은 사람</span></p>
+  <div class="pg"><span>Rules</span><span>19</span></div>
+</section>
+
+<section class="slide">
+  <h2>기억할 두 마디</h2>
+  <div class="ba">
+    <div>
+      <div class="lbl">열 때</div>
+      <h3>"시작하자"</h3>
+      <div class="res">피드백 받고, 노하우 읽고, 비슷한 지시문 <b>먼저 제안</b></div>
+    </div>
+    <div>
+      <div class="lbl">닫을 때</div>
+      <h3>"마무리하자"</h3>
+      <div class="res">일지, 노하우, 지시문 남기고 <b>GitHub 로</b></div>
+    </div>
+  </div>
+  <p class="note"><span class="mk">그 사이에 쌓인 노하우가 다음 작업을 빠르게</span></p>
+  <div class="pg"><span>Wrap-up</span><span>20</span></div>
+</section>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="chalk" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="2.4" xChannelSelector="R" yChannelSelector="G" result="d"/>
+    <feTurbulence type="fractalNoise" baseFrequency="1.9" numOctaves="1" seed="7" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.5 1.45" result="ga"/>
+    <feComposite in="d" in2="ga" operator="in"/>
+  </filter>
+  <filter id="chalk-text" x="-3%" y="-20%" width="106%" height="150%">
+    <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="2" seed="11" result="g"/>
+    <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.6 1.5" result="ga"/>
+    <feComposite in="SourceGraphic" in2="ga" operator="in" result="t"/>
+    <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="1" seed="2" result="n"/>
+    <feDisplacementMap in="t" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+<script>
+(() => {
+  const NS = 'http://www.w3.org/2000/svg';
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const P = () => ({
+    ink: css('--ink'), dim: css('--ink-3'), pink: css('--pink'), sky: css('--blue'), green: css('--green'),
+    orange: css('--orange'), yellow: css('--yellow'), red: css('--red'), purple: css('--purple'),
+  });
+  // faint chalk rubbed into a box: same hue as the outline, low alpha, never hatched behind text
+  const tint = { yellow: 'rgba(255, 227, 128, .11)', pink: 'rgba(255, 158, 196, .09)', sky: 'rgba(142, 209, 252, .26)', red: 'rgba(255, 138, 138, .22)' };
+  let seed = 1;
+  const base = o => Object.assign({ roughness: 1.6, bowing: 1.4, strokeWidth: 2.8, seed: seed++ }, o);
+
+  function overlay(el) {
+    el.classList.add('sk');
+    el.querySelectorAll(':scope > svg.rough').forEach(s => s.remove());
+    const s = document.createElementNS(NS, 'svg');
+    s.classList.add('rough');
+    const w = el.offsetWidth + 12, h = el.offsetHeight + 12;
+    s.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    el.prepend(s);
+    return { s, w, h, r: rough.svg(s) };
+  }
+  function box(el, o) {
+    const { s, w, h, r } = overlay(el);
+    s.appendChild(r.rectangle(6, 6, w - 12, h - 12, base(o)));
+  }
+  // progress: plain chalk box, plus a gauge at the bottom filled to pct
+  function progress(el, pct) {
+    const c = P();
+    box(el, { stroke: c.ink });
+    const g = el.querySelector('.gauge');
+    if (!g) return;
+    const { s, w, h, r } = overlay(g);
+    s.appendChild(r.rectangle(6, 6, w - 12, h - 12, base({ stroke: c.dim, strokeWidth: 2, roughness: 1 })));
+    const fw = (w - 12) * pct;
+    if (fw > 2) s.appendChild(r.rectangle(6, 6, fw, h - 12, base({ stroke: 'none', fill: c.sky, fillStyle: 'solid', roughness: 1.1 })));
+  }
+  // a professor circling a word
+  function ring(el, col) {
+    const { s, w, h, r } = overlay(el);
+    s.appendChild(r.ellipse(w / 2, h / 2, w + 4, h + 10, base({ stroke: col, strokeWidth: 2.4, roughness: 1.3, bowing: 0.8 })));
+  }
+  // title: a chalk underline under each text line
+  function underline(h) {
+    if (!h.querySelector('.hlw')) h.innerHTML = `<span class="hlw">${h.innerHTML}</span>`;
+    h.style.position = 'relative'; h.style.zIndex = 0;
+    h.querySelectorAll(':scope > svg.hl-svg').forEach(s => s.remove());
+    const hb = h.getBoundingClientRect();
+    const s = document.createElementNS(NS, 'svg');
+    s.classList.add('hl-svg');
+    s.setAttribute('style', `left:0;top:0;width:${hb.width}px;height:${hb.height}px`);
+    s.setAttribute('viewBox', `0 0 ${hb.width} ${hb.height}`);
+    const r = rough.svg(s);
+    // two loose wavy strokes that cross, like a quick double underline in blue chalk
+    for (const rc of h.querySelector('.hlw').getClientRects()) {
+      const x = rc.left - hb.left - 6, y = rc.bottom - hb.top - rc.height * 0.06, w = rc.width + 14;
+      [[0, 0, 1, 0.7], [Math.PI, 3, 0.94, 0.9]].forEach(([ph, dy, span, f]) => {
+        const pts = Array.from({ length: 9 }, (_, k) => [x + w * span * k / 8, y + dy + 8 * Math.sin(k * f + ph)]);
+        s.appendChild(r.curve(pts, base({ stroke: P().sky, strokeWidth: 3, roughness: 0.9, bowing: 0.6 })));
+      });
+    }
+    h.prepend(s);
+  }
+
+  function diagram() { document.querySelectorAll('.diagram svg').forEach(drawDiagram); }
+  function drawDiagram(svg) {
+    svg.querySelectorAll('.rough-copy').forEach(n => n.remove());
+    const g = document.createElementNS(NS, 'g');
+    g.classList.add('rough-copy', 'rough-crayon');
+    svg.prepend(g);
+    const r = rough.svg(svg), c = P();
+    const cols = [c.sky, c.pink, c.green, c.orange];
+    let i = 0;
+    svg.querySelectorAll('rect.s-box, rect.s-inv').forEach(el => {
+      const [x, y, w, h] = ['x', 'y', 'width', 'height'].map(a => +el.getAttribute(a));
+      const inv = el.classList.contains('s-inv');
+      g.appendChild(r.rectangle(x, y, w, h, base(inv
+        ? { stroke: c.yellow, fill: tint.yellow, fillStyle: 'solid', strokeWidth: 3.4 }
+        : { stroke: cols[i++ % cols.length], strokeWidth: 2.8 })));
+    });
+    svg.querySelectorAll('path.s-l').forEach(el => {
+      const pts = []; let x = 0, y = 0;
+      el.getAttribute('d').match(/[MHVL][^MHVL]*/g).forEach(seg => {
+        const k = seg[0], v = seg.slice(1).trim().split(/[\s,]+/).map(Number);
+        if (k === 'M' || k === 'L') { x = v[0]; y = v[1]; }
+        if (k === 'H') x = v[0];
+        if (k === 'V') y = v[0];
+        pts.push([x, y]);
+      });
+      const dashed = el.classList.contains('d');
+      const o = base({ stroke: dashed ? c.purple : c.ink, strokeWidth: 2.8, strokeLineDash: dashed ? [10, 10] : undefined });
+      g.appendChild(r.linearPath(pts, o));
+      if (el.classList.contains('n')) return;                       // plain line, no arrowhead
+      const [x2, y2] = pts[pts.length - 1], [x1, y1] = pts[pts.length - 2];
+      const a = Math.atan2(y2 - y1, x2 - x1), L = 16;
+      for (const da of [2.6, -2.6]) g.appendChild(r.line(x2, y2, x2 + L * Math.cos(a + da), y2 + L * Math.sin(a + da), base({ stroke: o.stroke, strokeWidth: 2.8 })));
+    });
+  }
+
+  // cover: one hill doodle and one sparkle, kept quiet
+  function cover() {
+    const sec = document.querySelector('.cover');
+    if (!sec) return;
+    sec.querySelectorAll('svg.doodle').forEach(n => n.remove());
+    const s = document.createElementNS(NS, 'svg');
+    s.classList.add('doodle', 'rough-crayon');
+    const W = sec.offsetWidth, H = sec.offsetHeight, c = P();
+    s.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    sec.prepend(s);
+    const r = rough.svg(s);
+
+    // two hill strokes in green chalk on the empty right half, like a doodle left on the board
+    const hill = pts => s.appendChild(r.linearPath(pts.map(([x, y]) => [W * x, H * y]), base({ stroke: c.green, strokeWidth: 3, roughness: 1.3, bowing: 1 })));
+    hill([[0.555, 0.62], [0.6, 0.5], [0.645, 0.37], [0.695, 0.47], [0.745, 0.585]]);
+    hill([[0.72, 0.52], [0.775, 0.42], [0.83, 0.32], [0.885, 0.44], [0.94, 0.57]]);
+
+    function sparkle(x, y, R, col) {
+      for (let k = 0; k < 7; k++) {
+        const a = -Math.PI / 2 + (k - 3) * 0.42;
+        s.appendChild(r.line(x + R * 0.45 * Math.cos(a), y + R * 0.45 * Math.sin(a), x + R * Math.cos(a), y + R * Math.sin(a), base({ stroke: col, strokeWidth: 2.4, roughness: 0.8 })));
+      }
+    }
+    // sparkle beside the first title line, read from the rendered title
+    const sb = sec.getBoundingClientRect(), h1 = sec.querySelector('h1');
+    const rg = document.createRange(); rg.selectNodeContents(h1.firstChild);
+    const ab = rg.getBoundingClientRect();
+    sparkle(ab.right - sb.left + 48, ab.top - sb.top + ab.height * 0.55, 44, c.yellow);
+    // two faint doodles in the corners (idea, code), nothing more
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('opacity', '.3');
+    s.appendChild(g);
+    const gr = rough.svg(g);
+    SCRIB.bulb(gr, g, W * 0.86, H * 0.18, 150);
+    SCRIB.code(gr, g, W * 0.12, H * 0.86, 110);
+  }
+
+  // ---- faint chalk doodles that match the slide, one per tagged slide ----
+  // built from sketchnote basics: page = docs, check = test, magnifier = review, bulb = idea
+  const ln = (o) => base(Object.assign({ stroke: P().ink, strokeWidth: 2.2, roughness: 1.1, bowing: 1 }, o));
+  const check = (r, s, x, y, k, o) => s.appendChild(r.linearPath([[x, y], [x + k * 0.35, y + k * 0.4], [x + k, y - k * 0.45]], ln(o)));
+  const SCRIB = {
+    // agenda: a clipboard with two items ticked
+    checklist(r, s, cx, cy, S) {
+      const w = S * 0.62, h = S * 0.82, x = cx - w / 2, y = cy - h / 2;
+      s.appendChild(r.rectangle(x, y, w, h, ln()));
+      s.appendChild(r.rectangle(cx - w * 0.2, y - S * 0.06, w * 0.4, S * 0.12, ln({ strokeWidth: 2 })));
+      [0, 1, 2].forEach(i => {
+        const ry = y + h * (0.3 + i * 0.24), bx = x + w * 0.14, k = S * 0.1;
+        s.appendChild(r.rectangle(bx, ry - k / 2, k, k, ln({ strokeWidth: 1.8 })));
+        s.appendChild(r.line(bx + k * 1.6, ry, x + w * 0.86, ry, ln({ strokeWidth: 1.8 })));
+        if (i < 2) check(r, s, bx + k * 0.1, ry - k * 0.05, k * 1.1, { stroke: P().yellow, strokeWidth: 2.4 });
+      });
+    },
+    // docs everywhere: a stack of pages with a folded corner
+    docs(r, s, cx, cy, S) {
+      const w = S * 0.5, h = S * 0.66, f = S * 0.14;
+      [2, 1].forEach(k => {                                       // pages behind: only the top and right edges peek out
+        const x = cx - w / 2 + k * S * 0.09, y = cy - h / 2 - k * S * 0.09;
+        s.appendChild(r.linearPath([[x, y + S * 0.09], [x, y], [x + w, y], [x + w, y + h], [x + w - S * 0.09, y + h]], ln({ strokeWidth: 1.8 })));
+      });
+      const x = cx - w / 2, y = cy - h / 2;
+      s.appendChild(r.polygon([[x, y], [x + w - f, y], [x + w, y + f], [x + w, y + h], [x, y + h]], ln()));
+      s.appendChild(r.linearPath([[x + w - f, y], [x + w - f, y + f], [x + w, y + f]], ln({ strokeWidth: 1.8 })));
+      [0.38, 0.54, 0.7].forEach((t, i) => s.appendChild(r.line(x + w * 0.16, y + h * t, x + w * (i === 2 ? 0.6 : 0.84), y + h * t, ln({ strokeWidth: 1.6 }))));
+      check(r, s, x + w * 0.5, y + h * 0.86, S * 0.16, { stroke: P().yellow, strokeWidth: 2.6 });
+    },
+    // anvil: an anvil, a hammer coming down, and a few sparks
+    anvil(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.polygon([[X(-0.62), Y(-0.02)], [X(-0.3), Y(-0.12)], [X(0.42), Y(-0.12)], [X(0.42), Y(0.04)], [X(0.16), Y(0.12)],
+        [X(0.3), Y(0.36)], [X(-0.28), Y(0.36)], [X(-0.12), Y(0.12)], [X(-0.3), Y(0.04)]], ln()));
+      s.appendChild(r.line(X(0.62), Y(-0.78), X(0.18), Y(-0.36), ln({ strokeWidth: 2.6 })));            // handle
+      s.appendChild(r.polygon([[X(0.02), Y(-0.44)], [X(0.16), Y(-0.58)], [X(0.38), Y(-0.36)], [X(0.24), Y(-0.22)]], ln()));  // head
+      [[-0.3, -0.42], [-0.12, -0.5], [-0.38, -0.26], [0.0, -0.62]].forEach(([dx, dy]) =>
+        s.appendChild(r.line(X(0.02), Y(-0.16), X(0.02 + dx * 0.6), Y(-0.16 + dy * 0.6), ln({ stroke: P().yellow, strokeWidth: 2.2, roughness: 0.8 }))));
+    },
+    // test: a lab flask with bubbles
+    flask(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.linearPath([[X(-0.1), Y(-0.42)], [X(-0.1), Y(-0.14)], [X(-0.38), Y(0.38)], [X(0.38), Y(0.38)], [X(0.1), Y(-0.14)], [X(0.1), Y(-0.42)]], ln()));
+      s.appendChild(r.line(X(-0.15), Y(-0.42), X(0.15), Y(-0.42), ln()));
+      s.appendChild(r.curve([[X(-0.24), Y(0.12)], [X(-0.12), Y(0.09)], [X(0), Y(0.13)], [X(0.12), Y(0.09)], [X(0.24), Y(0.12)]], ln({ strokeWidth: 1.8 })));
+      check(r, s, X(-0.08), Y(0.26), S * 0.16, { stroke: P().yellow, strokeWidth: 2.4 });
+      [[0.04, -0.56, 0.1], [-0.07, -0.7, 0.07], [0.1, -0.84, 0.12]].forEach(([dx, dy, d]) => s.appendChild(r.circle(X(dx), Y(dy), S * d, ln({ strokeWidth: 1.6 }))));
+    },
+    // team status: bars going up with an arrow
+    chart(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.linearPath([[X(-0.6), Y(-0.42)], [X(-0.6), Y(0.36)], [X(0.62), Y(0.36)]], ln()));
+      [[-0.46, 0.18], [-0.18, 0.3], [0.1, 0.44], [0.38, 0.58]].forEach(([dx, h]) => s.appendChild(r.rectangle(X(dx), Y(0.36 - h), S * 0.16, S * h, ln({ strokeWidth: 1.8 }))));
+      s.appendChild(r.curve([[X(-0.5), Y(0.02)], [X(-0.15), Y(-0.08)], [X(0.18), Y(-0.24)], [X(0.5), Y(-0.44)]], ln({ stroke: P().yellow, strokeWidth: 2.4 })));
+      s.appendChild(r.linearPath([[X(0.36), Y(-0.44)], [X(0.52), Y(-0.45)], [X(0.47), Y(-0.3)]], ln({ stroke: P().yellow, strokeWidth: 2.4 })));
+    },
+    // review bot: a robot face with a magnifier
+    robot(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.rectangle(X(-0.42), Y(-0.24), S * 0.6, S * 0.48, ln()));
+      s.appendChild(r.line(X(-0.12), Y(-0.24), X(-0.12), Y(-0.4), ln()));
+      s.appendChild(r.circle(X(-0.12), Y(-0.44), S * 0.08, ln({ strokeWidth: 1.8 })));
+      [-0.26, 0.02].forEach(dx => s.appendChild(r.circle(X(dx), Y(-0.06), S * 0.1, ln({ strokeWidth: 1.8 }))));
+      s.appendChild(r.rectangle(X(-0.26), Y(0.08), S * 0.28, S * 0.08, ln({ strokeWidth: 1.6 })));
+      [-0.47, 0.18].forEach(dx => s.appendChild(r.rectangle(X(dx), Y(-0.08), S * 0.05, S * 0.16, ln({ strokeWidth: 1.6 }))));
+      s.appendChild(r.circle(X(0.38), Y(0.2), S * 0.3, ln({ stroke: P().yellow, strokeWidth: 2.4 })));
+      s.appendChild(r.line(X(0.48), Y(0.31), X(0.64), Y(0.48), ln({ stroke: P().yellow, strokeWidth: 3 })));
+    },
+    // cover: a light bulb with rays
+    bulb(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.circle(X(0), Y(-0.12), S * 0.5, ln()));
+      s.appendChild(r.linearPath([[X(-0.12), Y(0.1)], [X(-0.1), Y(0.28)], [X(0.1), Y(0.28)], [X(0.12), Y(0.1)]], ln()));
+      [0.34, 0.4].forEach(y => s.appendChild(r.line(X(-0.09), Y(y), X(0.09), Y(y), ln({ strokeWidth: 1.8 }))));
+      s.appendChild(r.linearPath([[X(-0.06), Y(0.06)], [X(-0.03), Y(-0.12)], [X(0.03), Y(-0.06)], [X(0.06), Y(-0.16)]], ln({ stroke: P().yellow, strokeWidth: 1.8 })));
+      [-2.4, -1.95, -1.57, -1.19, -0.74].forEach(a => s.appendChild(r.line(X(0.36 * Math.cos(a)), Y(-0.12 + 0.36 * Math.sin(a)), X(0.48 * Math.cos(a)), Y(-0.12 + 0.48 * Math.sin(a)), ln({ stroke: P().yellow, strokeWidth: 2 }))));
+    },
+    // cover: code brackets
+    code(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.linearPath([[X(-0.3), Y(-0.24)], [X(-0.56), Y(0)], [X(-0.3), Y(0.24)]], ln({ strokeWidth: 2.6 })));
+      s.appendChild(r.line(X(0.1), Y(-0.3), X(-0.1), Y(0.3), ln({ strokeWidth: 2.6 })));
+      s.appendChild(r.linearPath([[X(0.3), Y(-0.24)], [X(0.56), Y(0)], [X(0.3), Y(0.24)]], ln({ strokeWidth: 2.6 })));
+    },
+  };
+  function scribbles() {
+    document.querySelectorAll('.slide[data-scrib]').forEach(sec => {
+      sec.querySelectorAll(':scope > svg.scrib').forEach(n => n.remove());
+      const h2 = sec.querySelector('h2'), next = h2 && h2.nextElementSibling;
+      if (!next) return;
+      const sb = sec.getBoundingClientRect(), hb = h2.getBoundingClientRect(), nb = next.getBoundingClientRect();
+      const W = sec.offsetWidth, H = sec.offsetHeight;
+      // free corner: right of the title, below the nav buttons, above the first block
+      const x0 = Math.max(hb.right - sb.left + 90, W * 0.5), x1 = W - W * 0.05, y0 = 78, y1 = nb.top - sb.top - 18;
+      const S = Math.min(y1 - y0, 170);
+      if (S < 90 || x1 - x0 < S * 1.6) return;
+      const s = document.createElementNS(NS, 'svg');
+      s.classList.add('scrib', 'rough-crayon');
+      s.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      sec.prepend(s);
+      SCRIB[sec.dataset.scrib](rough.svg(s), s, x1 - S * 0.95, (y0 + y1) / 2, S);
+    });
+  }
+  // clumsy star + loose underline on a takeaway line (.mk underline only, .mk.st also the star)
+  function marks() {
+    document.querySelectorAll('.mk').forEach(el => {
+      el.querySelectorAll(':scope > svg').forEach(n => n.remove());
+      const b = el.getBoundingClientRect();
+      const s = document.createElementNS(NS, 'svg');
+      s.classList.add('rough-crayon');
+      s.setAttribute('style', `width:${b.width}px;height:${b.height}px`);
+      s.setAttribute('viewBox', `0 0 ${b.width} ${b.height}`);
+      el.prepend(s);
+      const r = rough.svg(s), c = P();
+      for (const rc of el.getClientRects()) {
+        const x = rc.left - b.left - 4, y = rc.bottom - b.top + 1, w = rc.width + 8;
+        [[0, 0, 1, 0.8], [Math.PI, 3, 0.93, 1]].forEach(([ph, dy, span, f]) => {
+          const pts = Array.from({ length: 9 }, (_, k) => [x + w * span * k / 8, y + dy + 3.5 * Math.sin(k * f + ph)]);
+          s.appendChild(r.curve(pts, base({ stroke: c.sky, strokeWidth: 2.2, roughness: 0.9, bowing: 0.6 })));
+        });
+      }
+      if (!el.classList.contains('st')) return;
+      const R = b.height * 0.55, cx = -R - 14, cy = b.height / 2;
+      const pts = Array.from({ length: 6 }, (_, k) => {
+        const a = -Math.PI / 2 + k * Math.PI * 0.8, j = k === 5 ? 0.18 : (k % 2 ? 0.1 : -0.08);
+        return [cx + R * (1 + j) * Math.cos(a), cy + R * (1 + j) * Math.sin(a)];
+      });
+      s.appendChild(r.linearPath(pts, base({ stroke: c.sky, strokeWidth: 2.4, roughness: 1.2, bowing: 1.2 })));
+    });
+  }
+
+  function draw() {
+    if (!window.rough) return;
+    seed = 1;
+    const c = P();
+    const labelCols = [c.pink, c.sky, c.yellow, c.green];
+
+    document.querySelectorAll('.slide h2').forEach(underline);
+    document.querySelectorAll('small.k, .q, .lbl').forEach((el, i) => {
+      const col = el.closest('.trk') ? c.sky : labelCols[i % labelCols.length];
+      el.style.color = col;
+      ring(el, col);
+    });
+    document.querySelectorAll('.row').forEach(el => box(el, { stroke: c.ink }));
+    document.querySelectorAll('.row .n').forEach(el => {
+      const { s, w, h, r } = overlay(el);
+      s.appendChild(r.circle(w / 2, h / 2, Math.min(w, h) - 2, base({ stroke: c.yellow, strokeWidth: 2.6 })));
+    });
+    document.querySelectorAll('.boxes > *').forEach(el => {
+      if (el.dataset.pct) return progress(el, +el.dataset.pct / 100);
+      if (el.classList.contains('meta')) return box(el, { stroke: c.dim, strokeWidth: 2, strokeLineDash: [8, 7] });
+      box(el, el.classList.contains('on')
+        ? { stroke: c.yellow, strokeWidth: 3.4, fill: tint.yellow, fillStyle: 'solid' }
+        : { stroke: c.ink });
+    });
+    document.querySelectorAll('.figs > div, .score > div').forEach(el => box(el, { stroke: c.ink }));
+    document.querySelectorAll('.why > div, .qa > div, .ba > div').forEach(el => {
+      const em = el.classList.contains('fx') || el.classList.contains('ans') || el.previousElementSibling;
+      box(el, em ? { stroke: c.pink, strokeWidth: 3.2, fill: tint.pink, fillStyle: 'solid' } : { stroke: c.ink });
+    });
+    document.querySelectorAll('.cat > div').forEach((el, i) => box(el, { stroke: [c.sky, c.green, c.pink][i % 3], strokeWidth: 3 }));
+    document.querySelectorAll('.src span').forEach(el => box(el, { stroke: c.ink, strokeWidth: 2, strokeLineDash: [8, 7] }));
+    document.querySelectorAll('.logline, .alert').forEach(el => box(el, { stroke: c.ink, strokeWidth: 2.2 }));
+    // bars: chalk shading when the bar is empty, a soft rubbed fill when text sits on it
+    const bar = (el, col, soft) => box(el, el.textContent.trim()
+      ? { stroke: col, strokeWidth: 2.6, fill: soft, fillStyle: 'solid' }
+      : { stroke: col, strokeWidth: 2.4, fill: col, fillStyle: 'hachure', hachureGap: 6, fillWeight: 2.2, hachureAngle: -55 });
+    document.querySelectorAll('.bar .seen').forEach(el => bar(el, c.sky, tint.sky));
+    document.querySelectorAll('.bar .blind').forEach(el => bar(el, c.red, tint.red));
+    document.querySelectorAll('.repos i').forEach(el => box(el, { stroke: c.ink, strokeWidth: 1.6, roughness: 1.8 }));
+    document.querySelectorAll('.tblw').forEach(el => box(el, { stroke: c.ink }));
+    diagram();
+    cover();
+    scribbles();
+    marks();
+  }
+
+  let t;
+  const go = () => { clearTimeout(t); t = setTimeout(draw, 120); };
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(draw);
+  addEventListener('resize', go);
+})();
+</script>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  let cur = 0;
+  const go = i => { cur = Math.max(0, Math.min(slides.length - 1, i)); slides[cur].scrollIntoView(); };
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) cur = slides.indexOf(e.target); }), { threshold: 0.55 });
+  slides.forEach(s => io.observe(s));
+  document.getElementById('prev').onclick = () => go(cur - 1);
+  document.getElementById('next').onclick = () => go(cur + 1);
+  document.addEventListener('keydown', e => {
+    if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); go(cur + 1); }
+    if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(e.key)) { e.preventDefault(); go(cur - 1); }
+  });
+</script>
+</body>
+</html>
