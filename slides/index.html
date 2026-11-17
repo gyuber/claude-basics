@@ -232,12 +232,13 @@
 
 <section class="slide" data-scrib="checklist">
   <h2>이번 이야기</h2>
-  <div class="rows">
+  <div class="rows" style="gap:12px">
     <div class="row"><span class="n">1</span><h3>Claude Code 란</h3><span class="r">폴더째로 일 맡기기</span></div>
     <div class="row"><span class="n">2</span><h3>화면과 권한 모드</h3><span class="r">볼 곳, 평소엔 Auto</span></div>
     <div class="row"><span class="n">3</span><h3>일 시키기</h3><span class="r">좋은 지시, 이어서 다듬기</span></div>
     <div class="row"><span class="n">4</span><h3>CLAUDE.md 와 스킬</h3><span class="r">한 번 적어 두고 계속 쓰기</span></div>
-    <div class="row"><span class="n">5</span><h3>안전하게 쓰기</h3><span class="r">원문 확인, 사본, 개인정보</span></div>
+    <div class="row"><span class="n">5</span><h3>GitHub 기초</h3><span class="r">말로 올리고 받기</span></div>
+    <div class="row"><span class="n">6</span><h3>안전하게 쓰기</h3><span class="r">원문 확인, 사본, 개인정보</span></div>
   </div>
   <div class="pg"><span>Overview</span><span>02</span></div>
 </section>
@@ -644,6 +645,91 @@
   <div class="pg"><span>Example</span><span>28</span></div>
 </section>
 
+<!-- 5. GitHub -->
+<section class="slide" data-scrib="cloud" id="s5">
+  <h2>5. GitHub 기초</h2>
+  <div class="diagram">
+    <svg viewBox="0 0 1200 400" role="img" aria-label="내 PC 작업 폴더에서 GitHub 로 올리고, GitHub 에서 받아오며, 다른 PC 나 다른 사람과 주고받는 구조">
+      <rect rx="18" class="s-box" x="10" y="110" width="300" height="170"/>
+      <text class="s-t" x="160" y="180" text-anchor="middle">내 PC</text>
+      <text class="s-s" x="160" y="222" text-anchor="middle">작업 폴더</text>
+
+      <path class="s-l" d="M310 160 H 440"/>
+      <text class="s-lab" x="375" y="140" text-anchor="middle">올리기</text>
+      <path class="s-l" d="M440 240 H 310"/>
+      <text class="s-lab" x="375" y="290" text-anchor="middle">받기</text>
+
+      <rect rx="18" class="s-inv" x="450" y="90" width="300" height="210"/>
+      <text class="s-t i" x="600" y="170" text-anchor="middle">GitHub</text>
+      <text class="s-s i" x="600" y="212" text-anchor="middle">온라인 보관함</text>
+      <text class="s-s i" x="600" y="246" text-anchor="middle">바뀐 기록이 다 남음</text>
+
+      <path class="s-l" d="M750 160 H 880"/>
+      <path class="s-l" d="M880 240 H 750"/>
+
+      <rect rx="18" class="s-box" x="890" y="110" width="300" height="170"/>
+      <text class="s-t" x="1040" y="180" text-anchor="middle">다른 PC</text>
+      <text class="s-s" x="1040" y="222" text-anchor="middle">다른 사람</text>
+    </svg>
+  </div>
+  <p class="note">명령어는 몰라도 돼요. "GitHub 에 올려줘", "받아줘" 라고 말로 시키면 Claude 가 해요.</p>
+  <div class="pg"><span>GitHub</span><span>29</span></div>
+</section>
+
+<section class="slide">
+  <h2>알아야 할 단어 셋</h2>
+  <div class="cat">
+    <div>
+      <div class="cn">저장소</div>
+      <h3>repository</h3>
+      <div class="use">GitHub 에 있는 폴더 하나</div>
+      <ul>
+        <li>작업 폴더와 짝</li>
+        <li>비공개로 만들기</li>
+      </ul>
+    </div>
+    <div>
+      <div class="cn">올리기</div>
+      <h3>push</h3>
+      <div class="use">내 PC 에서 GitHub 로</div>
+      <ul>
+        <li>"GitHub 에 올려줘"</li>
+        <li>작업을 마칠 때</li>
+      </ul>
+    </div>
+    <div>
+      <div class="cn">받기</div>
+      <h3>pull</h3>
+      <div class="use">GitHub 에서 내 PC 로</div>
+      <ul>
+        <li>"최신 내용 받아줘"</li>
+        <li>작업을 시작할 때</li>
+      </ul>
+    </div>
+  </div>
+  <div class="pg"><span>GitHub</span><span>30</span></div>
+</section>
+
+<section class="slide">
+  <h2>올리면 안 되는 것</h2>
+  <div class="ba">
+    <div>
+      <div class="lbl">.gitignore 에 적기</div>
+      <h3>개인정보, 원본 자료</h3>
+      <div class="src"><span>자료/</span><span>결과물/</span></div>
+      <div class="res">적힌 폴더는 Claude 가 <b>올리지 않음</b></div>
+    </div>
+    <div>
+      <div class="lbl">올려도 되는 것</div>
+      <h3>규칙과 방법</h3>
+      <div class="src"><span>CLAUDE.md</span><span>스킬</span></div>
+      <div class="res">다른 PC 에서도 <b>같은 방식</b>으로</div>
+    </div>
+  </div>
+  <p class="note">.gitignore 는 "올리지 말 것" 목록 파일, 폴더 이름을 한 줄씩 적어요</p>
+  <div class="pg"><span>GitHub</span><span>31</span></div>
+</section>
+
 <section class="slide">
   <h2>예시: 말로 올리고 받기</h2>
   <div class="chat">
@@ -652,12 +738,28 @@
     <div class="me"><span class="who">🙋 나</span>다른 PC 에서 고친 거 받아줘</div>
   </div>
   <p class="note">올리기는 push, 받기는 pull, 말로 시키면 돼요</p>
-  <div class="pg"><span>Example</span><span>29</span></div>
+  <div class="pg"><span>Example</span><span>32</span></div>
 </section>
 
-<!-- 5. safety -->
-<section class="slide" data-scrib="chart" id="s5">
-  <h2>5. 안전하게 쓰기</h2>
+<section class="slide">
+  <h2>이런 메시지가 보이면</h2>
+  <div class="tblw">
+    <table class="tbl">
+      <thead><tr><th>Claude 가 말하면</th><th>뜻</th><th>할 일</th></tr></thead>
+      <tbody>
+        <tr><th>"올리기 실패"</th><td>인터넷이나 로그인 문제</td><td>작업은 PC 에 그대로, 나중에 다시</td></tr>
+        <tr><th>"충돌이 있어요"</th><td>같은 파일을 다른 곳에서도 고침</td><td>"어떻게 하면 돼?" 물어보기</td></tr>
+        <tr><th>"로그인이 필요해요"</th><td>GitHub 연결이 끊김</td><td>도와줄 사람에게 연락</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><span class="mk">올리기에 실패해도 작업한 내용은 PC 에 안전하게 남아요</span></p>
+  <div class="pg"><span>GitHub</span><span>33</span></div>
+</section>
+
+<!-- 6. safety -->
+<section class="slide" data-scrib="chart" id="s6">
+  <h2>6. 안전하게 쓰기</h2>
   <div class="boxes b3">
     <div><small class="k">1</small><h3>원문으로 확인</h3><p>출처, 조문, 숫자는 그럴듯하게 틀릴 수 있음</p></div>
     <div><small class="k">2</small><h3>사본으로 작업</h3><p>원본은 폴더에 넣지 않기</p></div>
@@ -667,7 +769,7 @@
     <div class="on"><small class="k">6</small><h3>판단은 사람이</h3><p>Claude 는 초안까지</p></div>
   </div>
   <p class="note"><span class="mk st">Claude 는 초안까지, 책임은 사람</span></p>
-  <div class="pg"><span>Safety</span><span>30</span></div>
+  <div class="pg"><span>Safety</span><span>34</span></div>
 </section>
 
 <section class="slide">
@@ -685,7 +787,7 @@
     </div>
   </div>
   <div class="alert">원문 확인 표시 예<code>대금 지급 기한은 납품 후 60일입니다 (원문 확인 필요: 계약서 5조)</code></div>
-  <div class="pg"><span>Example</span><span>31</span></div>
+  <div class="pg"><span>Example</span><span>35</span></div>
 </section>
 
 <section class="slide">
@@ -703,7 +805,7 @@
     </div>
   </div>
   <p class="note"><span class="mk">한 번 적어 둔 규칙과 스킬이 다음 작업을 빠르게</span></p>
-  <div class="pg"><span>Wrap-up</span><span>32</span></div>
+  <div class="pg"><span>Wrap-up</span><span>36</span></div>
 </section>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -865,6 +967,16 @@
   const ln = (o) => base(Object.assign({ stroke: P().ink, strokeWidth: 2.2, roughness: 1.1, bowing: 1 }, o));
   const check = (r, s, x, y, k, o) => s.appendChild(r.linearPath([[x, y], [x + k * 0.35, y + k * 0.4], [x + k, y - k * 0.45]], ln(o)));
   const SCRIB = {
+    // sync: a cloud with an up arrow and a down arrow
+    cloud(r, s, cx, cy, S) {
+      const X = k => cx + S * k, Y = k => cy + S * k;
+      s.appendChild(r.curve([[X(-0.5), Y(0.05)], [X(-0.52), Y(-0.15)], [X(-0.32), Y(-0.22)], [X(-0.22), Y(-0.42)], [X(0.02), Y(-0.48)], [X(0.2), Y(-0.36)], [X(0.38), Y(-0.36)], [X(0.52), Y(-0.16)], [X(0.48), Y(0.05)]], ln()));
+      s.appendChild(r.line(X(-0.5), Y(0.05), X(0.48), Y(0.05), ln()));
+      s.appendChild(r.line(X(-0.16), Y(0.42), X(-0.16), Y(0.12), ln({ stroke: P().yellow, strokeWidth: 2.4 })));
+      s.appendChild(r.linearPath([[X(-0.26), Y(0.22)], [X(-0.16), Y(0.12)], [X(-0.06), Y(0.22)]], ln({ stroke: P().yellow, strokeWidth: 2.4 })));
+      s.appendChild(r.line(X(0.16), Y(0.12), X(0.16), Y(0.42), ln({ strokeWidth: 2.2 })));
+      s.appendChild(r.linearPath([[X(0.06), Y(0.32)], [X(0.16), Y(0.42)], [X(0.26), Y(0.32)]], ln({ strokeWidth: 2.2 })));
+    },
     // agenda: a clipboard with two items ticked
     checklist(r, s, cx, cy, S) {
       const w = S * 0.62, h = S * 0.82, x = cx - w / 2, y = cy - h / 2;
