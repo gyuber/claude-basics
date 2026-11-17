@@ -1,0 +1,8 @@
+# 의뢰인 자료와 결과물은 절대 GitHub에 올리지 않는다
+자료/
+결과물/
+
+# 오피스 임시 파일
+~$*
+*.tmp
+.claude/settings.local.json

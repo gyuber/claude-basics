@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Bash(git pull:*)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git add 노하우.md:*)",
+      "Bash(git add 피드백.md:*)",
+      "Bash(git add 작업일지:*)",
+      "Bash(git add 재사용:*)",
+      "Bash(git add .claude:*)",
+      "Bash(git commit:*)",
+      "Bash(git push)"
+    ],
+    "deny": [
+      "Edit(./자료/**)",
+      "Write(./자료/**)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git add -A:*)",
+      "Bash(git add .:*)",
+      "Bash(rm:*)"
+    ]
+  }
+}
