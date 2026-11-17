@@ -20,6 +20,15 @@ body { width: 1280px; height: 760px; font-family: "Malgun Gothic", "Apple SD Got
 .side { background: #F0EEE6; border-right: 1px solid #E2DED2; padding: 14px 12px; display: flex; flex-direction: column; gap: 6px; }
 .dots { display: flex; gap: 7px; margin-bottom: 10px; }
 .dots i { width: 11px; height: 11px; border-radius: 50%; background: #D9D5C9; }
+.icons { display: flex; gap: 12px; align-items: center; color: #77736A; font-size: 15px; margin-bottom: 12px; }
+.icons .mode { margin-left: auto; display: flex; gap: 2px; background: #E6E3D9; border-radius: 8px; padding: 2px; font-weight: 400; }
+.icons .mode i { font-style: normal; padding: 3px 9px; border-radius: 6px; font-size: 13px; }
+.icons .mode i.on { background: #FFFFFF; color: #2B2A27; font-weight: 700; }
+.menu { font-size: 14px; padding: 7px 10px; border-radius: 8px; color: #3D3A34; }
+.menu.on { background: #E6E3D9; }
+.acct { margin-top: auto; font-size: 13px; color: #6B675E; border-top: 1px solid #E2DED2; padding-top: 10px; }
+.ph-row { display: flex; gap: 12px; align-items: center; }
+.plus { color: #6B675E; font-size: 18px; }
 .tabs { display: flex; gap: 4px; background: #E6E3D9; border-radius: 8px; padding: 3px; margin-bottom: 8px; }
 .tabs span { flex: 1; text-align: center; font-size: 13px; padding: 5px 0; border-radius: 6px; color: #77736A; }
 .tabs span.on { background: #FFFFFF; color: #2B2A27; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
@@ -57,11 +66,12 @@ th, td { border: 1px solid #E4E0D5; padding: 6px 10px; text-align: left; }
 th { background: #F3F1EA; }
 td.n { text-align: right; font-family: Consolas, monospace; }
 .warn { color: #B4532E; font-weight: 700; }
-.input { margin: 0 26px 10px; border: 1px solid #DDD8CB; background: #FFFFFF; border-radius: 14px; padding: 12px 16px 8px; }
+.input { margin: 0 26px 6px; border: 1px solid #DDD8CB; background: #FFFFFF; border-radius: 14px; padding: 12px 16px 8px; }
 .input .ph { color: #2B2A27; min-height: 22px; }
 .input .ph.empty { color: #A9A497; }
-.bar { display: flex; gap: 8px; margin-top: 10px; font-size: 12.5px; color: #6B675E; align-items: center; }
-.bar span { border: 1px solid #E4E0D5; border-radius: 7px; padding: 3px 9px; background: #FAF9F5; }
+.bar { display: flex; gap: 14px; margin: 0 40px 10px; font-size: 13px; color: #55524A; align-items: center; }
+.bar span { padding: 2px 4px; }
+.bar .chk { color: #8A867B; }
 .bar .model { margin-left: auto; }
 .pop { position: absolute; background: #FFFFFF; border: 1px solid #DDD8CB; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.14); padding: 6px; font-size: 14px; min-width: 300px; }
 .pop div { padding: 7px 10px; border-radius: 6px; display: flex; justify-content: space-between; gap: 16px; }
@@ -84,27 +94,35 @@ def esc(s):
     return html.escape(s, quote=False)
 
 
-def side(sessions, active=0, tree=None):
-    out = ['<div class="side"><div class="dots"><i></i><i></i><i></i></div>',
-           '<div class="tabs"><span>Chat</span><span>Cowork</span><span class="on">Code</span></div>',
-           '<div class="new">＋ New</div><div class="sec">작업</div>']
-    for i, s in enumerate(sessions):
-        name, badge = (s if isinstance(s, tuple) else (s, None))
-        b = ''
-        if badge:
-            cls, txt = badge
-            b = f'<span class="badge {cls}">{txt}</span>'
-        out.append(f'<div class="sess{" on" if i == active else ""}"><span>{name}</span>{b}</div>')
+def side(sessions, active=0, tree=None, groups=None):
+    """Sidebar like the real app: icon row, Korean menu, sessions grouped under a folder heading."""
+    out = ['<div class="side"><div class="icons"><span>☰</span><span>▢</span><span>‹</span><span>›</span>'
+           '<b class="mode"><i>💬</i><i class="on">&lt;/&gt;</i></b></div>',
+           '<div class="menu on">＋ 새로 만들기</div><div class="menu">⌕ 검색</div>'
+           '<div class="menu">⧉ 아티팩트</div><div class="menu">▭ 사용자 지정</div><div class="menu">··· 더 보기</div>']
+    if groups is None:
+        groups = [('사건폴더', sessions, active)]
+    for title, sess, act in groups:
+        out.append(f'<div class="sec">{title} ⌄</div>')
+        for i, item in enumerate(sess):
+            name, badge = (item if isinstance(item, tuple) else (item, None))
+            b = ''
+            if badge:
+                cls, txt = badge
+                b = f'<span class="badge {cls}">{txt}</span>'
+            out.append(f'<div class="sess{" on" if i == act else ""}"><span>{name}</span>{b}</div>')
     if tree:
-        out.append('<div class="sec">폴더</div><div class="tree">' + tree + '</div>')
-    out.append('</div>')
+        out.append('<div class="sec">폴더 내용</div><div class="tree">' + tree + '</div>')
+    out.append('<div class="acct">한 · 사용자 · Pro</div></div>')
     return ''.join(out)
 
 
-def bar(mode='Auto', folder='사건폴더', text='', empty=True):
-    ph = f'<div class="ph{" empty" if empty else ""}">{text or "할 일을 적고 Enter"}</div>'
-    return (f'<div class="input">{ph}<div class="bar"><span>Local</span><span>📁 {folder}</span>'
-            f'<span>{mode}</span><span>＋</span><span class="model">기본 모델</span></div></div>')
+def bar(mode='자동', folder='사건폴더', text='', empty=True, env='로컬'):
+    """Prompt box and the row under it: environment, folder, worktree / model, effort, permission mode."""
+    ph = f'<div class="ph{" empty" if empty else ""}">{text or "작업을 설명하거나 질문하세요"}</div>'
+    return (f'<div class="input"><div class="ph-row"><span class="plus">＋</span>{ph}</div></div>'
+            f'<div class="bar"><span>⌨ {env} ⌄</span><span>📁 {folder} ⌄</span><span class="chk">☐ 워크트리</span>'
+            f'<span class="model">기본 모델 · 중간</span><span>{mode}</span></div>')
 
 
 def me(t):
@@ -159,38 +177,38 @@ S['02-screen'] = page(
     '<div class="main"><div class="top"><b>판결문 요약</b> · 사건폴더</div><div class="msgs">' +
     ai('판결문을 읽었어요. 어떤 형식으로 요약할까요?') +
     '</div>' + bar(text='<span class="chip">@판</span>', empty=False) + '</div></div>',
-    '<div class="pop" style="left:300px;top:520px"><div class="on"><span>📄 자료/판결문.pdf</span><small>23쪽</small></div>'
+    '<div class="pop" style="left:300px;top:505px"><div class="on"><span>📄 자료/판결문.pdf</span><small>23쪽</small></div>'
     '<div><span>📄 자료/판결문_2심.pdf</span><small>18쪽</small></div></div>'
-    '<div class="call" style="left:300px;top:478px">@ 치면 파일 목록</div>'
+    '<div class="call" style="left:300px;top:470px">@ 치면 파일 목록</div>'
     '<div class="call" style="left:300px;top:732px">① 환경</div>'
-    '<div class="call" style="left:372px;top:732px">② 작업 폴더</div>'
-    '<div class="call" style="left:478px;top:732px">③ 권한 모드</div>'
-    '<div class="call" style="left:1160px;top:732px">④ 모델</div>')
+    '<div class="call" style="left:390px;top:732px">② 사건 폴더</div>'
+    '<div class="call" style="left:1010px;top:732px">③ 모델</div>'
+    '<div class="call" style="left:1150px;top:732px">④ 권한 모드</div>')
 
 # 03: permission prompt
 S['03-permission'] = page(
     '<div class="win">' + side(['증거목록 만들기'], 0, TREE) +
-    '<div class="main"><div class="top"><b>증거목록 만들기</b> · 사건폴더 · Manual</div><div class="msgs">' +
+    '<div class="main"><div class="top"><b>증거목록 만들기</b> · 사건폴더 · 수동</div><div class="msgs">' +
     me('<span class="chip">자료/</span> PDF들로 증거목록 만들어줘') +
     '<div class="tool">✓ 읽음 자료/ (PDF 20개)</div>' +
     '<div class="perm"><b>이 명령을 실행할까요?</b><div class="cmd">rm 자료/계약서_v1.docx</div>'
     '<div style="font-size:13px;color:#6B675E;margin-bottom:10px">자료 폴더의 파일을 <b class="warn">삭제</b>하는 명령이에요.</div>'
     '<div class="btns"><span class="btn">허락</span><span class="btn ok">거절</span></div></div>' +
-    '</div>' + bar(mode='Manual') + '</div></div>',
+    '</div>' + bar(mode='수동') + '</div></div>',
     '<div class="call" style="left:760px;top:330px">지우라고 한 적 없으면 → 거절</div>')
 
 # 03b: plan mode
 S['03-plan'] = page(
     '<div class="win">' + side(['증거목록 만들기'], 0, TREE) +
-    '<div class="main"><div class="top"><b>증거목록 만들기</b> · 사건폴더 · Plan</div><div class="msgs">' +
+    '<div class="main"><div class="top"><b>증거목록 만들기</b> · 사건폴더 · 계획</div><div class="msgs">' +
     me('<span class="chip">자료/</span> 폴더 PDF 20개로 증거목록을 엑셀로 만들어줘') +
     '<div class="card"><h4>📝 계획</h4>'
     '1. PDF 20개를 하나씩 읽기<br>2. 파일마다 작성일, 작성자, 내용 한 줄 뽑기<br>'
     '3. 날짜순으로 갑 제1호증부터 번호 붙이기<br>4. <span class="chip">결과물/증거목록.xlsx</span>로 저장<br>'
     '5. 날짜를 못 찾은 파일은 맨 아래 따로 표시</div>' +
     ai('이대로 진행할까요? 고칠 부분이 있으면 말씀해 주세요.') +
-    '</div>' + bar(mode='Plan') + '</div></div>',
-    '<div class="call" style="left:420px;top:732px">③ Plan: 계획만, 아무것도 안 바꿈</div>')
+    '</div>' + bar(mode='계획') + '</div></div>',
+    '<div class="call" style="left:930px;top:734px">↑ 권한 모드 "계획": 계획만, 아무것도 안 바꿈</div>')
 
 # 04: good instruction
 S['04-instruction'] = page(
@@ -284,14 +302,14 @@ S['10-anonymize'] = page(
 
 # 11: parallel sessions
 S['11-parallel'] = page(
-    '<div class="win">' + side([('판결문 요약', ('done', '완료')), ('송금내역 정리', ('run', '진행 중')),
-                                ('내용증명 초안', ('run', '진행 중'))], 1, TREE) +
+    '<div class="win">' + side([], groups=[('2026가합1234 매매대금', [('판결문 요약', ('done', '완료')), ('송금내역 정리', ('run', '진행 중'))], 1),
+                              ('2026가단5678 임대차', [('내용증명 초안', ('run', '진행 중'))], -1)]) +
     '<div class="main"><div class="top"><b>송금내역 정리</b> · 사건폴더</div><div class="msgs">' +
     me('<span class="chip">@자료/거래내역.xlsx</span> 피고 B에게 보낸 돈만 <span class="chip">결과물/송금내역.xlsx</span>로') +
     '<div class="tool">… 거래 312건 읽는 중</div>' +
     '</div>' + bar() + '</div></div>',
     '<div class="toast"><b>판결문 요약</b> 작업이 끝났어요<small>결과물/판결문요약.docx</small></div>'
-    '<div class="call" style="left:60px;top:150px">Ctrl+N 으로 작업 추가</div>')
+    '<div class="call" style="left:60px;top:58px">＋ 새로 만들기 (Ctrl+N)</div>')
 
 # 07b: which rules and skills are loaded (root vs project)
 S['07-scope'] = page(
@@ -309,6 +327,26 @@ S['07-scope'] = page(
        '<tr><td>🧩 스킬</td><td>이 사건</td><td>/하자담보-정리</td></tr></table>'
        '<br>두 CLAUDE.md는 <b>둘 다</b> 읽어요. 공통 규칙 다음에 사건 규칙을 읽어요.') +
     '</div>' + bar(folder='2026가합1234') + '</div></div>')
+
+# 11b: sessions grouped by case folder, and adding a folder to one session
+S['11-folders'] = page(
+    '<div class="win">' + side([], groups=[
+        ('2026가합1234 매매대금', [('판결문 요약', ('done', '완료')), ('항소이유서 초안', ('run', '진행 중'))], 1),
+        ('2026가단5678 임대차', [('내용증명 초안', ('done', '완료'))], -1),
+        ('폴더 없음', ['질문 메모'], -1)]) +
+    '<div class="main"><div class="top"><b>항소이유서 초안</b> · 2026가합1234 매매대금 + 1심기록</div><div class="msgs">' +
+    me('1심 기록 폴더도 같이 보면서 항소이유를 정리해줘') +
+    '<div class="tool">✓ 폴더 추가: 사건\\2026가합1234_1심기록</div>' +
+    ai('두 폴더를 같이 보고 있어요.<br>• <span class="chip">2026가합1234 매매대금/</span> 항소심 폴더<br>'
+       '• <span class="chip">2026가합1234_1심기록/</span> 1심 판결문, 준비서면, 증거<br><br>'
+       '1심 판결의 사실인정과 법리 판단에서 다툴 만한 부분 4곳을 찾았어요.') +
+    '</div>' + bar(folder='2026가합1234 매매대금') + '</div></div>',
+    '<div class="pop" style="left:296px;top:520px">'
+    '<div><span>📎 파일 또는 사진 추가</span></div>'
+    '<div class="on"><span>📁 폴더 추가</span><small>이 작업에 폴더 하나 더</small></div>'
+    '<div><span>/ 슬래시 명령</span></div></div>'
+    '<div class="call" style="left:296px;top:478px">＋ › 폴더 추가</div>'
+    '<div class="call" style="left:22px;top:560px">↑ 사이드바는 사건 폴더별로 묶여요</div>')
 
 
 def main():

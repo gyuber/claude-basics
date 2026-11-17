@@ -62,7 +62,7 @@
   <div class="figs">
     <div><div class="v">사본</div><div class="k2">원본 기록은 넣지 않기</div></div>
     <div><div class="v">Local</div><div class="k2">내 PC 에서 일하기</div></div>
-    <div><div class="v">Auto</div><div class="k2">평소 권한 모드</div></div>
+    <div><div class="v">자동</div><div class="k2">평소 권한 모드</div></div>
     <div><div class="v">0</div><div class="k2">외울 명령어</div></div>
   </div>
   <div class="pg"><span>Claude Code</span><span>05</span></div>
@@ -117,11 +117,12 @@
 <section class="slide" data-scrib="robot" id="s2">
   <h2>2. 입력창 아래 한 줄</h2>
   <div class="boxes b2">
-    <div><small class="k">① 환경</small><h3>Local</h3><p>Claude 가 일하는 곳, 내 PC</p></div>
+    <div><small class="k">① 환경</small><h3>로컬 (또는 Ubuntu)</h3><p>Claude 가 일하는 곳, 내 PC</p></div>
     <div><small class="k">② 폴더</small><h3>사건 폴더</h3><p>어느 사건 폴더에서 일할지</p></div>
-    <div class="on"><small class="k">③ 권한 모드</small><h3>Auto</h3><p>감시 모델이 먼저 검사, 다다음 장</p></div>
-    <div><small class="k">④ 모델</small><h3>기본값 그대로</h3><p>어떤 Claude 를 쓰는지</p></div>
+    <div><small class="k">③ 모델</small><h3>기본값 그대로</h3><p>옆의 "중간"은 생각하는 정도</p></div>
+    <div class="on"><small class="k">④ 권한 모드</small><h3>자동</h3><p>감시 모델이 먼저 검사, 다다음 장</p></div>
   </div>
+  <p class="note">가운데 워크트리 칸은 개발자용, 꺼 두면 돼요</p>
   <div class="pg"><span>Screen</span><span>07</span></div>
 </section>
 
@@ -158,7 +159,7 @@
     <table class="tbl">
       <thead><tr><th>모드</th><th>뜻</th><th>언제</th></tr></thead>
       <tbody>
-        <tr><th>Auto</th><td>거의 안 물음, 위험한 건 감시 모델이 막음</td><td>평소</td></tr>
+        <tr><th>자동 (Auto)</th><td>거의 안 물음, 위험한 건 감시 모델이 막음</td><td>평소</td></tr>
         <tr><th>Plan</th><td>계획만 세우고 아무것도 안 바꿈</td><td>큰 작업 전에</td></tr>
         <tr><th>Manual</th><td>고칠 때마다 허락을 물음</td><td>하나하나 볼 때</td></tr>
         <tr><th>Bypass</th><td>검사 없이 전부 실행</td><td>쓰지 않기</td></tr>
@@ -418,6 +419,65 @@
     <div><img src="SCN/11-parallel.png" alt="사이드바에 작업 세 개, 끝난 작업은 알림으로"><p class="cap">재현 그림: 사이드바에 작업 세 개, 끝난 작업은 알림으로</p></div>
   </div>
   <div class="pg"><span>Example</span><span>00</span></div>
+</section>
+
+<section class="slide">
+  <h2>사건 폴더마다 작업</h2>
+  <div class="boxes b3">
+    <div><small class="k">2026가합1234</small><h3>매매대금</h3><p>판결문 요약, 항소이유서 초안</p></div>
+    <div><small class="k">2026가단5678</small><h3>임대차</h3><p>내용증명 초안</p></div>
+    <div><small class="k">폴더 없음</small><h3>질문 메모</h3><p>폴더 없이 간단히 묻기</p></div>
+  </div>
+  <div class="figs">
+    <div><div class="v">＋ 새로 만들기</div><div class="k2">작업 하나 열기</div></div>
+    <div><div class="v">폴더 버튼</div><div class="k2">입력창 아래에서 사건 폴더</div></div>
+    <div><div class="v">폴더별 묶음</div><div class="k2">사이드바가 사건별로 정리</div></div>
+    <div><div class="v">안 섞임</div><div class="k2">각자 자기 폴더 규칙과 스킬</div></div>
+  </div>
+  <div class="pg"><span>Parallel</span><span>00</span></div>
+</section>
+
+<section class="slide">
+  <h2>한 작업에 폴더 추가</h2>
+  <div class="ba">
+    <div>
+      <div class="lbl">이럴 때</div>
+      <h3>항소이유서 쓰면서 1심 기록도</h3>
+      <div class="src"><span>항소심 폴더</span><span>+ 1심 기록 폴더</span></div>
+      <div class="res">입력창 왼쪽 <b>＋ › 폴더 추가</b></div>
+    </div>
+    <div>
+      <div class="lbl">주의</div>
+      <h3>다른 의뢰인 폴더는 붙이지 않기</h3>
+      <div class="src"><span>같은 사건 1심, 2심</span><span>공통 서식 폴더</span></div>
+      <div class="res">필요한 것만, 기록이 <b>섞이지 않게</b></div>
+    </div>
+  </div>
+  <div class="pg"><span>Parallel</span><span>00</span></div>
+</section>
+
+<section class="slide">
+  <h2>재현: 사건별 사이드바와 폴더 추가</h2>
+  <div class="boxes shot big">
+    <div><img src="SCN/11-folders.png" alt="사건 폴더별로 묶인 사이드바와 폴더 추가 메뉴"><p class="cap">재현 그림: 사건 폴더별로 묶인 사이드바와 ＋ › 폴더 추가</p></div>
+  </div>
+  <div class="pg"><span>Example</span><span>00</span></div>
+</section>
+
+<section class="slide">
+  <h2>앱 작업과 터미널 작업</h2>
+  <div class="tblw">
+    <table class="tbl">
+      <thead><tr><th></th><th>앱 Code 탭</th><th>터미널 (claude)</th></tr></thead>
+      <tbody>
+        <tr><th>지난 작업</th><td>사이드바에서 클릭</td><td>claude --resume</td></tr>
+        <tr><th>서로 보이나</th><td>터미널 작업은 안 보임</td><td>앱 작업은 안 보임</td></tr>
+        <tr><th>같이 쓰는 것</th><td colspan="1">CLAUDE.md, 스킬, 메모리</td><td>같음</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note"><span class="mk">대화 기록은 따로, 같은 폴더면 규칙과 메모리는 이어져요</span></p>
+  <div class="pg"><span>Parallel</span><span>00</span></div>
 </section>
 
 <!-- 4. CLAUDE.md + skills -->
@@ -728,7 +788,7 @@
     <div><small class="k">1</small><h3>원문으로 확인</h3><p>판례, 조문, 이율은 틀릴 수 있고 없는 판례도 지어냄</p></div>
     <div><small class="k">2</small><h3>기록은 사본으로</h3><p>원본 기록은 폴더에 넣지 않기</p></div>
     <div><small class="k">3</small><h3>개인정보 지우기</h3><p>실명은 A, B 로, 주민번호, 연락처는 삭제</p></div>
-    <div><small class="k">4</small><h3>평소엔 Auto</h3><p>Bypass 는 쓰지 않기, 모르는 허락은 거절</p></div>
+    <div><small class="k">4</small><h3>평소엔 자동</h3><p>Bypass 는 쓰지 않기, 모르는 허락은 거절</p></div>
     <div><small class="k">5</small><h3>큰 작업은 Plan</h3><p>계획을 보고 진행</p></div>
     <div class="on"><small class="k">6</small><h3>판단은 변호사가</h3><p>Claude 는 초안까지</p></div>
   </div>
